@@ -1,6 +1,0 @@
-OptOpt.o: OptOpt.cpp OptOpt.hpp
-episode_generator.o: episode_generator.cpp episode_generator.hpp
-main.o: main.cpp episode_generator.hpp markov_persuasion_process.hpp \
- OptOpt.hpp
-markov_persuasion_process.o: markov_persuasion_process.cpp \
- markov_persuasion_process.hpp episode_generator.hpp OptOpt.hpp

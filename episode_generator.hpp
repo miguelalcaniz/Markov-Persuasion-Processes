@@ -158,5 +158,50 @@
         std::vector<std::vector<std::vector<std::vector<double>>>> R; 
     };
 
+/* EJEMPLO DE TEMPLATE PARA HACER REWARDS SENDER Y REWARDS RECEIVER
 
+
+#include <iostream>
+#include <type_traits>
+
+enum class Sign {
+    Positive,
+    Negative
+};
+
+template <Sign S>
+class Number {
+public:
+    Number(int value) {
+        if constexpr (S == Sign::Positive) {
+            value_ = (value < 0) ? -value : value;  // Ensure the value is positive
+        } else if constexpr (S == Sign::Negative) {
+            value_ = (value > 0) ? -value : value;  // Ensure the value is negative
+        }
+    }
+
+    void print() const {
+        if constexpr (S == Sign::Positive) {
+            std::cout << "Positive Number: " << value_ << std::endl;
+        } else if constexpr (S == Sign::Negative) {
+            std::cout << "Negative Number: " << value_ << std::endl;
+        }
+    }
+
+private:
+    int value_;
+};
+
+int main() {
+    Number<Sign::Positive> posNumber(10);
+    Number<Sign::Negative> negNumber(-10);
+
+    posNumber.print();  // Output: Positive Number: 10
+    negNumber.print();  // Output: Negative Number: -10
+
+    return 0;
+}
+
+
+*/
 #endif /* EPISODE_GENERATOR_HPP */

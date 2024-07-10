@@ -8,7 +8,6 @@
 #include "OptOpt.hpp"
 
 
-
 int main() {
 
   // Declaring the Markov Persuasion Process variables
@@ -64,10 +63,11 @@ int main() {
     actual_state = trans.next_state(l, actual_state, action);
   }
 
+/*
  std::cout<< "ESTO ES LA PRUEBA DE LA FUNCION STREAM \n";
  std::cout<< ep << std::endl;
  std::cout<< std::endl;
-
+*/
  
   // Testing the prior function and its method to randomly generate an outcome
 /*

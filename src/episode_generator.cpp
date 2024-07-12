@@ -52,6 +52,59 @@ int prior::generate_outcome(const int l, const int s)
   return distribution(knuth);
 }
 
+/// Definition of the stream operator for the prior class
+
+std::ostream &
+operator<<(std::ostream &stream, prior &mu){
+
+  stream << "The prior function is:\n\n";
+
+  for(int l = 0; l < mu.L; l++){
+    int sMax = mu.states[l];
+    for(int s = 0; s < sMax; ++s){
+      for(int o = 0; o < mu.A; ++o)
+        stream << mu.get_prior(l,s,o) << ' ';
+      stream << std::endl;
+    }
+    stream << std::endl;
+  }
+
+  return stream;
+}
+
+// Constructor which already sets the values
+transitions::transitions(const TensorI &state_values, const size_t A_value)
+{
+  A = A_value;
+  L = state_values.size();
+  states = state_values;
+  tr.resize(L-1);
+}
+
+// Method for initializing the values of the variables
+void transitions::init_transitions(const TensorI &state_values, const size_t A_value)
+{
+  A = A_value;
+  L = state_values.size();
+  states = state_values;
+  tr.resize(L-1);
+}
+
+// Method that gives you the next state randomly with the given probability distribution
+int transitions::next_state(const int l, const int origin, const int action)
+{  
+  if(l >= L || origin > states[l]){
+    std::cerr<< "The input for the transitions next_state function is wrong.\n";
+    return 0;
+  }
+  std::random_device re;
+  std::knuth_b knuth(re());
+  
+  TensorD &prob = tr[l][{origin, action}];
+  std::discrete_distribution<> distribution(prob.begin(), prob.end());
+  return distribution(knuth);
+}
+
 /// Definition of the stream operator for the transitions class
 
 std::ostream &
@@ -73,61 +126,6 @@ operator<<(std::ostream &stream, transitions &trans)
    }
   return stream;
 }
-
-
-// Constructor which already sets the values
-transitions::transitions(const TensorI &state_values, const size_t A_value)
-{
-  A = A_value;
-  L = state_values.size();
-  states = state_values;
-  tr.resize(L);
-}
-
-// Method for initializing the values of the variables
-void transitions::init_transitions(const TensorI &state_values, const size_t A_value)
-{
-  A = A_value;
-  L = state_values.size();
-  states = state_values;
-  tr.resize(L);
-}
-
-// Method that gives you the next state randomly with the given probability distribution
-int transitions::next_state(const int l, const int origin, const int action)
-{  
-  std::random_device re;
-  std::knuth_b knuth(re());
-  
-  TensorD &prob = tr[l][{origin, action}];
-  std::discrete_distribution<> distribution(prob.begin(), prob.end());
-  return distribution(knuth);
-}
- 
-
-/// Definition of the stream operator for the rewards class
-template<TypeReward R>
-std::ostream &
-operator<<(std::ostream &stream, rewards<R> &rewards){
-
-  if(R == TypeReward::Sender)
-     stream << "The sender rewards are:\n\n";
-  if(R == TypeReward::Receiver)
-     stream << "The receiver rewards are:\n\n";
-
-  for(int l = 0; l < rewards.L-1; ++l){
-   for(int s = 0; s < rewards.states[l]; ++s){
-      for(int o = 0; o < rewards.A; ++o){
-         for(int i = 0; i < rewards.A; ++i)
-           stream << rewards.get_reward(l, s, o, i) << " ";
-         stream << "\n";
-      }
-   }
-   stream << std::endl;
-  }
-  return stream;
-}
-
 
 // Constructor which already sets de values
 template<TypeReward R>
@@ -156,8 +154,10 @@ void rewards<R>::init_rewards(const TensorI &states_values, const int A_value)
 template<TypeReward R>
 void rewards<R>::set_rewards(const int l, const int state, const int outcome, 
                  const TensorD& rewards){
-  if(l > L || state > states[l] || outcome > A)
-  std::cerr << "The inputs given to the function are incorrect.\n";
+  if(l > L || state > states[l] || outcome > A){
+    std::cerr << "The inputs given to the function are incorrect.\n";
+    return;
+  }
   rw[l][state][outcome] = rewards;
 }
 
@@ -179,25 +179,27 @@ const TensorD& rewards<R>::get_rewards(const int l, const int state, const int o
 }
 
 
-/// Definition of the stream operator for the prior class
-
+/// Definition of the stream operator for the rewards class
+template<TypeReward R>
 std::ostream &
-operator<<(std::ostream &stream, prior &mu){
+operator<<(std::ostream &stream, rewards<R> &rewards){
 
-  stream << "The prior function is:\n\n";
+  if(R == TypeReward::Sender)
+     stream << "The sender rewards are:\n\n";
+  if(R == TypeReward::Receiver)
+     stream << "The receiver rewards are:\n\n";
 
-  for(int l = 0; l < mu.L; l++){
-    int sMax = mu.states[l];
-    for(int s = 0; s < sMax; ++s){
-      for(int o = 0; o < mu.A; ++o)
-        stream << mu.get_prior(l,s,o) << ' ';
-      stream << std::endl;
-    }
-    stream << std::endl;
+  for(int l = 0; l < rewards.L; ++l){
+   for(int s = 0; s < rewards.states[l]; ++s){
+      for(int o = 0; o < rewards.A; ++o){
+         for(int i = 0; i < rewards.A; ++i)
+           stream << rewards.get_reward(l, s, o, i) << " ";
+         stream << "\n";
+      }
+   }
+   stream << std::endl;
   }
-
   return stream;
-
 }
 
 // Explicit instance for the template for the types used

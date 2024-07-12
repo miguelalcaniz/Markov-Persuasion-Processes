@@ -13,6 +13,17 @@
 using TensorI = std::vector<int>;
 using TensorD = std::vector<double>;
 
+// Definition of the struct Settings
+struct Enviroment {
+    size_t L;
+    TensorI states;
+    size_t A;
+    transitions trans;
+    rewards<TypeReward::Sender> Srewards;
+    rewards<TypeReward::Receiver> Rrewards; 
+    prior mu;
+};
+
 // State-Outcome-Action
 class SOA {
 public:
@@ -85,15 +96,16 @@ private:
 
 
 // Declaration of the function that reads the values of the enviroment
-void read_enviroment(size_t &L, TensorI &states, size_t &A, transitions &trans, 
-                     rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
-                     prior &mu, const std::string& fileName);
+void read_enviroment(Enviroment &env, const std::string& fileName);
 
 
 // Declaration of the function that prints the values of the enviroment
-void print_enviroment(TensorI &states, size_t &A, transitions &trans, 
-                     rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
-                     prior &mu);
+void print_enviroment(Enviroment &env);
+
+
+// Algorithm 1 (Sender-Receivers Interaction at episode t)
+
+episode S_R_interaction(Enviroment& env, sign_scheme phi);
 
 
 #endif /* MARKOV_PERSUASION_PROCESS_HPP */

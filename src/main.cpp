@@ -13,26 +13,31 @@ int main() {
 
   // Declaring the Markov Persuasion Process variables
 
-  size_t L;
-  std::vector<int> states;
-  size_t A;
-  transitions trans;
-  rewards<TypeReward::Sender> Srewards;
-  rewards<TypeReward::Receiver> Rrewards; 
-  prior mu;
+  Enviroment env;
+
+  // Defining some references to the variables to avoid writing env.
+  size_t& L = env.L;
+  TensorI& states = env.states;
+  size_t& A = env.A;
+  transitions& trans = env.trans;
+  rewards<TypeReward::Sender>& Srewards = env.Srewards;
+  rewards<TypeReward::Receiver>& Rrewards = env.Rrewards; 
+  prior& mu = env.mu;
+
+  // Setting the the data file name and the data file source
 
   std::string source = "././test/";
   std::string filename = "data.txt";
-  //std::string filename = "data2.txt"; ???????????????????'
+  //std::string filename = "data2.txt";    STILL IN THE TO DO LIST 
   std::string DATA = source + filename;
 
   // Reading the Markov Persuasion Process variables
 
-  read_enviroment(L, states, A, trans, Srewards, Rrewards, mu, DATA);
+  read_enviroment(env, DATA);
 
   // Printing the Markov Persuasion Process variables
 
-  print_enviroment(states, A, trans, Srewards, Rrewards, mu);
+  print_enviroment(env);
 
   // Initializing and printing signaling squeme
 
@@ -54,40 +59,25 @@ int main() {
     }
 
 
-  // Algorithm 1 (Sender-Receiver Interaction at episode t)
+  // Algorithm 1 (Sender-Receivers Interaction at episode t)
 
-  int actual_state = 0;
-  int outcome;
-  int action;
-  
-  episode ep(L);
-
-  std::cout<< "HERE WE TEST ALGORITHM 1 (Sender-Receiver Interaction) \n\n";
-
-  for(int l = 0; l < L-1; ++l){
-    outcome = mu.generate_outcome(l, actual_state);
-    action = phi.recommendation(l, actual_state, outcome);
-    SOA soa(l, outcome, action);
-    ep.set_soa(l, soa);
-    actual_state = trans.next_state(l, actual_state, action);
-  }
+ episode ep = S_R_interaction(env, phi);
 
  std::cout<< ep << std::endl;
 
- 
-  // Testing the prior function and its method to randomly generate an outcome
-/*
-  std::cout<< "Imprimiendo el vector de probabilidades de siguientes estados:\n\n";
-  std::vector<double> v = mu.get_prior(0,0);
-  for(const auto &el: v) std::cout<< el << ' ';
-  std::cout<< std::endl << std::endl;
+  // Algorithm 2 (Optimistic Persuasive Policy Search (full))
+  
+  // Require: X, A, T, confidence parameter delta ( 0 < delta < 1)
+  unsigned int T = 10;
 
-  int n = 20;
-  for(int i = 0; i < n; ++i){
-    std::cout<< mu.generate_outcome(0,0) << std::endl;
-  }
-  std::cout<< std::endl;
-*/
+  // Initialize all estimators to 0
+  prior estimated_mu;
+  transitions estimated_trans;
+  rewards<TypeReward::Sender> estimated_SR;
+  rewards<TypeReward::Receiver> estimated_RR;
+
+
+  // Initialize all bounds to +inf
 
   return 0;
 }

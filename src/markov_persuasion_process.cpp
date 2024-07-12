@@ -10,9 +10,8 @@
 // Method that generates an episode with a given prior distribution, siganling scheme and probabilities of transitions
 void episode::generate_episode(prior mu, sign_scheme phi, transitions trans)
 {
-    int actual_state = 0;
-    int outcome;
-    int action;
+    int actual_state = 0; 
+    int outcome, action;
      
     for(int l = 0; l < L-1; ++l){
       outcome = mu.generate_outcome(l, actual_state);
@@ -26,10 +25,17 @@ void episode::generate_episode(prior mu, sign_scheme phi, transitions trans)
 
 // This function reads a .txt file and sets all the information of the enviroment into the variables 
 
-void read_enviroment(size_t &L, TensorI &states, size_t &A, transitions &trans, 
-                     rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
-                     prior &mu, const std::string& fileName)
+void read_enviroment(Enviroment &env, const std::string& fileName)
 {
+  // Defining some references to the variables to avoid writing env.
+  size_t& L = env.L;
+  TensorI& states = env.states;
+  size_t& A = env.A;
+  transitions& trans = env.trans;
+  rewards<TypeReward::Sender>& Srewards = env.Srewards;
+  rewards<TypeReward::Receiver>& Rrewards = env.Rrewards; 
+  prior& mu = env.mu;
+
    // Initializing the .txt stream reader
    std::ifstream inputFile(fileName);
 
@@ -102,7 +108,7 @@ void read_enviroment(size_t &L, TensorI &states, size_t &A, transitions &trans,
   Srewards.init_rewards(states, A);
  
   double r;
-  for(int l = 0; l < L-1; ++l){
+  for(int l = 0; l < L; ++l){
     for(int s = 0; s < states[l]; ++s){
       for(int o = 0; o < A; ++o){
          TensorD v;
@@ -127,7 +133,7 @@ void read_enviroment(size_t &L, TensorI &states, size_t &A, transitions &trans,
   
   Rrewards.init_rewards(states, A);
  
-  for(int l = 0; l < L-1; ++l){
+  for(int l = 0; l < L; ++l){
     for(int s = 0; s < states[l]; ++s){
       for(int o = 0; o < A; ++o){
          TensorD v;
@@ -181,16 +187,22 @@ void read_enviroment(size_t &L, TensorI &states, size_t &A, transitions &trans,
 
 
 
-void print_enviroment(TensorI &states, size_t &A, transitions &trans, 
-                     rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
-                     prior &mu){
+void print_enviroment(Enviroment& env)
+{
+  // Defining some references to the variables to avoid writing env.
+  size_t& L = env.L;
+  TensorI& states = env.states;
+  size_t& A = env.A;
+  transitions& trans = env.trans;
+  rewards<TypeReward::Sender>& Srewards = env.Srewards;
+  rewards<TypeReward::Receiver>& Rrewards = env.Rrewards; 
+  prior& mu = env.mu;
 
   std::cout<< "--------------------------------------" << std::endl;
   std::cout<< "TESTING THE CLASS EPISODE" << std::endl << std::endl;
 
   // Printing the states
 
-  size_t L = states.size();
   std::cout<< "The lenght of the episodes L is : " << L << "\n";
   std::cout<< "And every partition has the following numbers of states: ";
   for(int i = 0; i < L; ++i)
@@ -223,15 +235,48 @@ void print_enviroment(TensorI &states, size_t &A, transitions &trans,
 std::ostream &operator<<(std::ostream &stream, episode &ep)
 {
   stream << "The episode is:\n\n";
-  for(int l = 0; l < ep.L-1; ++l){
+  for(int l = 0; l < ep.L; ++l){
     stream << '(' << ep.get_soa(l).getX() << ", " << ep.get_soa(l).getW() << ", ";
     stream << ep.get_soa(l).getA() << ')';
-    if(l != ep.L-2) std::cout<< " --> ";
+    if(l != ep.L-1) std::cout<< " --> ";
   }
   stream << std::endl;
   return stream;
 };
 
+
+// Algorithm 1 (Sender-Receivers Interaction at episode t)
+
+episode S_R_interaction(Enviroment& env, sign_scheme phi){ 
+    
+  // Defining some references to the variables to avoid writing env.
+  size_t& L = env.L;
+  TensorI& states = env.states;
+  size_t& A = env.A;
+  transitions& trans = env.trans;
+  rewards<TypeReward::Sender>& Srewards = env.Srewards;
+  rewards<TypeReward::Receiver>& Rrewards = env.Rrewards; 
+  prior& mu = env.mu;
+
+  // Declaration of the auxiliar variables for the algorithm
+  int action, outcome, actual_state = 0;
+  
+  episode ep(L);
+
+  std::cout<< "HERE WE TEST ALGORITHM 1 (Sender-Receiver Interaction) \n\n";
+
+  for(int l = 0; l < L; ++l){
+    outcome = mu.generate_outcome(l, actual_state);
+    action = phi.recommendation(l, actual_state, outcome);
+    SOA soa(actual_state, outcome, action);
+    ep.set_soa(l, soa);
+    if(l != L-1)
+      actual_state = trans.next_state(l, actual_state, action);
+  }
+  
+  return ep;
+
+}
 
 
 

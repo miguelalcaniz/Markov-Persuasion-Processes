@@ -1,0 +1,7 @@
+OptOpt.o: src/OptOpt.cpp src/OptOpt.hpp
+episode_generator.o: src/episode_generator.cpp src/episode_generator.hpp
+markov_persuasion_process.o: src/markov_persuasion_process.cpp \
+ src/markov_persuasion_process.hpp src/episode_generator.hpp \
+ src/OptOpt.hpp
+main.o: src/main.cpp src/episode_generator.hpp \
+ src/markov_persuasion_process.hpp src/OptOpt.hpp

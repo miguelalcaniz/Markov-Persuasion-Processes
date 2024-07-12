@@ -9,7 +9,6 @@
 #include "OptOpt.hpp"
 
 
-
 int main() {
 
   // Declaring the Markov Persuasion Process variables
@@ -65,20 +64,12 @@ int main() {
 
   std::cout<< "HERE WE TEST ALGORITHM 1 (Sender-Receiver Interaction) \n\n";
 
- // for(int l = 0; l < L-1; ++l){
-  for(int l = 0; l < 1; ++l){
-    std::cout<< "l = " << l << std::endl;
+  for(int l = 0; l < L-1; ++l){
     outcome = mu.generate_outcome(l, actual_state);
-    std::cout<< "Llega al outcome y da " << outcome << "\n";
     action = phi.recommendation(l, actual_state, outcome);
-    std::cout<< "Llega a la accion\n Y a todo esto la l = " << l << " outcome=" << outcome<< " action=" <<  std::endl;
     SOA soa(l, outcome, action);
-    /*
     ep.set_soa(l, soa);
-    std::cout<< "Llega a la soa\n";
     actual_state = trans.next_state(l, actual_state, action);
-    std::cout<< "Llega a la next state\n";
-    */
   }
 
  std::cout<< ep << std::endl;

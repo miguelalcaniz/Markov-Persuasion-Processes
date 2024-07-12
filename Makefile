@@ -36,3 +36,6 @@ $(DEPEND): $(SRCS)
 	done
 
 -include $(DEPEND)
+
+# Debugging section
+print-%: ; @echo $* = $($*)

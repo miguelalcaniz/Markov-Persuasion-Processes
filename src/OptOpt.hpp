@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 #include <random>
+#include <iostream>
 
 // Alias por std::vector<double>
 using probs = std::vector<double>;
@@ -42,16 +43,14 @@ public:
   }
 
 
-  int recommendation(int l, int s, int outcome){
-         
+  int recommendation(int l, int s, int outcome)
+  {      
     std::random_device re;
     std::knuth_b knuth(re());
    
     probs &prob = squeme[l][s][outcome];
-    std::cout<< std::endl <<  squeme.size() << ' ' << squeme[0].size() << ' ' << squeme[0][0].size() << std::endl;
     std::discrete_distribution<> distribution(prob.begin(), prob.end());
     int rec = distribution(knuth);
-    std::cout<< rec << std::endl;
     return rec;
   }
 

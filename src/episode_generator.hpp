@@ -8,6 +8,13 @@
 #include <sstream>
 #include <random>
 
+// Alias for making the code more readable
+using TensorI = std::vector<int>;
+using TensorD = std::vector<double>;
+using Tensor2D = std::vector<TensorD>;
+using Tensor3D = std::vector<Tensor2D>;
+using Tensor4D = std::vector<Tensor3D>;
+
 
     class prior {
     public:
@@ -15,16 +22,16 @@
         prior() = default;
         
         // Constructor which already sets the values
-        prior(const std::vector<int> &states_values, const int A_value);
+        prior(const TensorI &states_values, const size_t A_value);
 
         // Method to initialize
-        void init_prior(const std::vector<int> &states_values, const int A_value);
+        void init_prior(const TensorI &states_values, const size_t A_value);
 
         // Method to set values of the prior
-        void set_prior(const int l, const int s, const std::vector<double> &probs);
+        void set_prior(const int l, const int s, const TensorD &probs);
 
         // Methods to obtain values of the prior
-        const std::vector<double>& get_prior(const int l, const int s) const{
+        const TensorD& get_prior(const int l, const int s) const{
             return priorD[l][s];
         }
 
@@ -44,8 +51,8 @@
         // The probability of having an outcome k in each state j of partition i (prior[i][j][k])
         size_t L;
         size_t A;
-        std::vector<int> states;
-        std::vector<std::vector<std::vector<double>>> priorD;
+        TensorI states;
+        Tensor3D priorD;
     };
 
     class transitions {
@@ -55,19 +62,19 @@
         transitions() = default;
 
         // Constructor which already sets the values
-        transitions(const std::vector<int> &state_values, const size_t A_value);
+        transitions(const TensorI &state_values, const size_t A_value);
 
         // Method for initializing the values of the variables
-        void init_transitions(const std::vector<int> &state_values, const size_t A_value);
+        void init_transitions(const TensorI &state_values, const size_t A_value);
 
         // Method for setting the values of the transition probabilities
         void set_transitions(const int l, const int origin, const int action, 
-                             const std::vector<double> &probs){
+                             const TensorD &probs){
             tr[l][{origin, action}] = probs;
         }
 
         // Method for obtaining the values of the transition probabilities
-        std::vector<double>& get_transitions(const int l, const int origin, const int action){
+        TensorD& get_transitions(const int l, const int origin, const int action){
             return tr[l][{origin, action}];
         }
 
@@ -81,10 +88,10 @@
     private:
         size_t L;
         size_t A; 
-        std::vector<int> states;
+        TensorI states;
         // Given a state (partition and number of state), an outcome an an action you have the vector
         // of probabilities for each state of the next partition
-        std::vector<std::map<std::pair<int, int>, std::vector<double>>> tr; 
+        std::vector<std::map<std::pair<int, int>, TensorD>> tr; 
     };
 
     // Class to differenciate reward from sender and from receiver
@@ -102,17 +109,17 @@
         rewards() = default;
 
         // Constructor which already initializes the sizes of the vectors
-        rewards(const std::vector<int> &states_values, const int A_value);
+        rewards(const TensorI &states_values, const int A_value);
 
         // Method for initializing the sizes of the vectors
-        void init_rewards(const std::vector<int> &states_values, const int A_value);
+        void init_rewards(const TensorI &states_values, const int A_value);
 
         // Method to set the values of the rewards
         void set_rewards(const int l, const int state, const int outcome, 
-                         const std::vector<double>& rewards);
+                         const TensorD& rewards);
         
         //Method to obtain the values of the rewards
-        const std::vector<double>& get_rewards(const int l, const int state, const int outcome) const;
+        const TensorD& get_rewards(const int l, const int state, const int outcome) const;
 
         const double& get_reward(const int l, const int state, const int outcome, const int action) const;
 
@@ -124,8 +131,8 @@
     private:
         size_t A;
         size_t L;
-        std::vector<int> states;
-        std::vector<std::vector<std::vector<std::vector<double>>>> rw; 
+        TensorI states;
+        Tensor4D rw; 
     };
 
 

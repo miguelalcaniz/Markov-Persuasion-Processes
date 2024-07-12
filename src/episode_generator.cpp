@@ -7,7 +7,7 @@
 
 
 // Constructor which already sets the values
-prior::prior(const std::vector<int> &states_values, const int A_value)
+prior::prior(const TensorI &states_values, const size_t A_value)
 {
   A = A_value;
   L = states_values.size();
@@ -20,7 +20,7 @@ prior::prior(const std::vector<int> &states_values, const int A_value)
 
 
 // Method to initialize
-void prior::init_prior(const std::vector<int> &states_values, const int A_value)
+void prior::init_prior(const TensorI &states_values, const size_t A_value)
 {
   A = A_value;
   L = states_values.size();
@@ -32,7 +32,7 @@ void prior::init_prior(const std::vector<int> &states_values, const int A_value)
 }
 
 // Method to set values of the prior
-void prior::set_prior(const int l, const int s, const std::vector<double> &probs)
+void prior::set_prior(const int l, const int s, const TensorD &probs)
 {
   priorD[l][s] = probs;
   if(probs.size() != A) {
@@ -47,7 +47,7 @@ int prior::generate_outcome(const int l, const int s)
   std::random_device re;
   std::knuth_b knuth(re());
    
-  std::vector<double> &prob = priorD[l][s];
+  TensorD &prob = priorD[l][s];
   std::discrete_distribution<> distribution(prob.begin(), prob.end());
   return distribution(knuth);
 }
@@ -58,8 +58,8 @@ std::ostream &
 operator<<(std::ostream &stream, transitions &trans)
 {
    stream << "The probability transitions are:\n\n";
-   int L = trans.L;
-   int nStatesO;
+   size_t L = trans.L;
+   size_t nStatesO;
    for(int l = 0; l < L-1; l++){
       nStatesO = trans.states[l];
       for(int sO = 0; sO < nStatesO; sO++){
@@ -76,7 +76,7 @@ operator<<(std::ostream &stream, transitions &trans)
 
 
 // Constructor which already sets the values
-transitions::transitions(const std::vector<int> &state_values, const size_t A_value)
+transitions::transitions(const TensorI &state_values, const size_t A_value)
 {
   A = A_value;
   L = state_values.size();
@@ -85,7 +85,7 @@ transitions::transitions(const std::vector<int> &state_values, const size_t A_va
 }
 
 // Method for initializing the values of the variables
-void transitions::init_transitions(const std::vector<int> &state_values, const size_t A_value)
+void transitions::init_transitions(const TensorI &state_values, const size_t A_value)
 {
   A = A_value;
   L = state_values.size();
@@ -99,7 +99,7 @@ int transitions::next_state(const int l, const int origin, const int action)
   std::random_device re;
   std::knuth_b knuth(re());
   
-  std::vector<double> &prob = tr[l][{origin, action}];
+  TensorD &prob = tr[l][{origin, action}];
   std::discrete_distribution<> distribution(prob.begin(), prob.end());
   return distribution(knuth);
 }
@@ -131,31 +131,31 @@ operator<<(std::ostream &stream, rewards<R> &rewards){
 
 // Constructor which already sets de values
 template<TypeReward R>
-rewards<R>::rewards(const std::vector<int> &states_values, const int A_value)
+rewards<R>::rewards(const TensorI &states_values, const int A_value)
 {
   A = A_value;
   L = states_values.size();
   states = states_values;
-  rw = std::vector<std::vector<std::vector<std::vector<double>>>>(states.size());
+  rw = Tensor4D(states.size());
   for(int i = 0; i < states.size(); i++)
-  rw[i] = std::vector<std::vector<std::vector<double>>>(states[i], std::vector<std::vector<double>> (A));
+  rw[i] = Tensor3D(states[i], Tensor2D (A));
 }
 
 // Method for initializing the values
 template<TypeReward R>
-void rewards<R>::init_rewards(const std::vector<int> &states_values, const int A_value)
+void rewards<R>::init_rewards(const TensorI &states_values, const int A_value)
 {
   A = A_value;
   L = states_values.size();
   states = states_values;
-  rw = std::vector<std::vector<std::vector<std::vector<double>>>>(states.size());
+  rw = Tensor4D(states.size());
   for(int i = 0; i < states.size(); i++)
-  rw[i] = std::vector<std::vector<std::vector<double>>>(states[i], std::vector<std::vector<double>> (A));
+  rw[i] = Tensor3D(states[i], Tensor2D (A));
 }
 
 template<TypeReward R>
 void rewards<R>::set_rewards(const int l, const int state, const int outcome, 
-                 const std::vector<double>& rewards){
+                 const TensorD& rewards){
   if(l > L || state > states[l] || outcome > A)
   std::cerr << "The inputs given to the function are incorrect.\n";
   rw[l][state][outcome] = rewards;
@@ -171,7 +171,7 @@ const double& rewards<R>::get_reward(const int l, const int state, const int out
 
 //Method to obtain the values of the rewards
 template<TypeReward R>
-const std::vector<double>& rewards<R>::get_rewards(const int l, const int state, const int outcome) const
+const TensorD& rewards<R>::get_rewards(const int l, const int state, const int outcome) const
 {
   if(l > L || state > states[l] || outcome > A)
     std::cerr << "The inputs given to the function are incorrect.\n";
@@ -202,16 +202,16 @@ operator<<(std::ostream &stream, prior &mu){
 
 // Explicit instance for the template for the types used
 
-template rewards<TypeReward::Receiver>::rewards(const std::vector<int> &states_values, const int A_value);
-template rewards<TypeReward::Sender>::rewards(const std::vector<int> &states_values, const int A_value);
-template void rewards<TypeReward::Receiver>::init_rewards(const std::vector<int> &states_values, const int A_value);
-template void rewards<TypeReward::Sender>::init_rewards(const std::vector<int> &states_values, const int A_value);
-template void rewards<TypeReward::Receiver>::set_rewards(const int l, const int state, const int outcome, const std::vector<double>& rewards);
-template void rewards<TypeReward::Sender>::set_rewards(const int l, const int state, const int outcome, const std::vector<double>& rewards);
+template rewards<TypeReward::Receiver>::rewards(const TensorI &states_values, const int A_value);
+template rewards<TypeReward::Sender>::rewards(const TensorI &states_values, const int A_value);
+template void rewards<TypeReward::Receiver>::init_rewards(const TensorI &states_values, const int A_value);
+template void rewards<TypeReward::Sender>::init_rewards(const TensorI &states_values, const int A_value);
+template void rewards<TypeReward::Receiver>::set_rewards(const int l, const int state, const int outcome, const TensorD& rewards);
+template void rewards<TypeReward::Sender>::set_rewards(const int l, const int state, const int outcome, const TensorD& rewards);
 template const double& rewards<TypeReward::Receiver>::get_reward(const int l, const int state, const int outcome, const int action) const;
 template const double& rewards<TypeReward::Sender>::get_reward(const int l, const int state, const int outcome, const int action) const;
-template const std::vector<double>& rewards<TypeReward::Receiver>::get_rewards(const int l, const int state, const int outcome) const;
-template const std::vector<double>& rewards<TypeReward::Sender>::get_rewards(const int l, const int state, const int outcome) const;
+template const TensorD& rewards<TypeReward::Receiver>::get_rewards(const int l, const int state, const int outcome) const;
+template const TensorD& rewards<TypeReward::Sender>::get_rewards(const int l, const int state, const int outcome) const;
 template std::ostream &operator<< (std::ostream& stream, rewards<TypeReward::Sender>& R);
 template std::ostream &operator<< (std::ostream& stream, rewards<TypeReward::Receiver>& R);
  

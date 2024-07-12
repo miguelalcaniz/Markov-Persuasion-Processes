@@ -9,6 +9,9 @@
 #include "episode_generator.hpp"
 #include "OptOpt.hpp"
 
+// Alias for making the code more readable
+using TensorI = std::vector<int>;
+using TensorD = std::vector<double>;
 
 // State-Outcome-Action
 class SOA {
@@ -82,13 +85,13 @@ private:
 
 
 // Declaration of the function that reads the values of the enviroment
-void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions &trans, 
+void read_enviroment(size_t &L, TensorI &states, size_t &A, transitions &trans, 
                      rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
                      prior &mu, const std::string& fileName);
 
 
 // Declaration of the function that prints the values of the enviroment
-void print_enviroment(std::vector<int> &states, size_t &A, transitions &trans, 
+void print_enviroment(TensorI &states, size_t &A, transitions &trans, 
                      rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
                      prior &mu);
 

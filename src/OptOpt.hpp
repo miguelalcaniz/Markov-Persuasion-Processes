@@ -6,11 +6,13 @@
 #include <random>
 #include <iostream>
 
-// Alias por std::vector<double>
-using probs = std::vector<double>;
-using outcome_probs = std::vector<probs>; 
-using state_outcome_probs = std::vector<std::vector<outcome_probs>>;
 
+// Alias for making the code more readable
+using TensorI = std::vector<int>;
+using TensorD = std::vector<double>;
+using Tensor2D = std::vector<TensorD>;
+using Tensor3D = std::vector<Tensor2D>;
+using Tensor4D = std::vector<Tensor3D>;
 
 class sign_scheme{
 public:
@@ -36,8 +38,8 @@ public:
 private:
   size_t L;
   size_t A;
-  std::vector<int> states;
-  state_outcome_probs squeme ;
+  TensorI states;
+  Tensor4D squeme ;
 };
 
 

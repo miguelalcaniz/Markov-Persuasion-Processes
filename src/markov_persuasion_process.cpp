@@ -26,7 +26,7 @@ void episode::generate_episode(prior mu, sign_scheme phi, transitions trans)
 
 // This function reads a .txt file and sets all the information of the enviroment into the variables 
 
-void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions &trans, 
+void read_enviroment(size_t &L, TensorI &states, size_t &A, transitions &trans, 
                      rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
                      prior &mu, const std::string& fileName)
 {
@@ -72,7 +72,7 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions
       for(int sO = 0; sO < nStatesO; sO++){
         for(int action = 0; action < A; action++){
           double p, sum = 0;
-          std::vector<double> probs;
+          TensorD probs;
           for(int sD = 0; sD < nStatesD; sD++){
             inputFile >> p;
             if(p > 1 || p < 0){
@@ -105,7 +105,7 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions
   for(int l = 0; l < L-1; ++l){
     for(int s = 0; s < states[l]; ++s){
       for(int o = 0; o < A; ++o){
-         std::vector<double> v;
+         TensorD v;
          for(int i = 0; i < A; ++i){
            inputFile >> r;
            if(r > 1 || r < 0){
@@ -130,7 +130,7 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions
   for(int l = 0; l < L-1; ++l){
     for(int s = 0; s < states[l]; ++s){
       for(int o = 0; o < A; ++o){
-         std::vector<double> v;
+         TensorD v;
          for(int i = 0; i < A; ++i){
            inputFile >> r;
            if(r > 1 || r < 0){
@@ -156,7 +156,7 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions
   for(int l = 0; l < L; l++){
     int sMax = states[l];
     for(int s = 0; s < sMax; ++s){
-      std::vector<double> ps;
+      TensorD ps;
       double sum = 0; 
       for(int o = 0; o < A; ++o){
         inputFile >> p;
@@ -181,7 +181,7 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions
 
 
 
-void print_enviroment(std::vector<int> &states, size_t &A, transitions &trans, 
+void print_enviroment(TensorI &states, size_t &A, transitions &trans, 
                      rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
                      prior &mu){
 

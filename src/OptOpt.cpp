@@ -3,7 +3,7 @@
 
 
 //Method for initializing the vector with size L
-void sign_scheme::init_scheme(const std::vector<int>& states_values,const size_t A_value)
+void sign_scheme::init_scheme(const TensorI& states_values,const size_t A_value)
 {   
   L = states_values.size();
   states = states_values;
@@ -27,7 +27,7 @@ int sign_scheme::recommendation(int l, int s, int outcome)
   std::random_device re;
   std::knuth_b knuth(re());
  
-  probs &prob = squeme[l][s][outcome];
+  TensorD &prob = squeme[l][s][outcome];
   std::discrete_distribution<> distribution(prob.begin(), prob.end());
   int rec = distribution(knuth);
   return rec;
@@ -51,7 +51,7 @@ void OptOpt(sign_scheme &SQ){
           for(int k = 0; k < SQ.A; ++k){
               double sum = 0;
               double value;
-              std::vector<double> v(SQ.A);
+              TensorD v(SQ.A);
 
               for(int r = 0; r < SQ.A; ++r){
                 value = dis(knuth);

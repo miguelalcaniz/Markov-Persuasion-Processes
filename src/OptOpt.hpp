@@ -18,21 +18,20 @@ public:
   sign_scheme(){};
 
   //Method for initializing the vector with size L
-  void init_scheme(const std::vector<int>& states_values,const size_t a_value, const size_t w_value){
+  void init_scheme(const std::vector<int>& states_values,const size_t A_value){
     
     L = states_values.size();
     states = states_values;
-    a = a_value;
-    w = w_value;
+    A = A_value;
 
     squeme.resize(L);
 
     for(int l = 0; l < L; ++l){
       squeme[l].resize(states[l]);
       for(int s = 0; s < states[l]; ++s){
-          squeme[l][s].resize(w);
-          for(int k = 0; k < w; ++k){
-              squeme[l][s][k].resize(a);
+          squeme[l][s].resize(A);
+          for(int k = 0; k < A; ++k){
+              squeme[l][s][k].resize(A);
           }
       }
     }
@@ -49,19 +48,20 @@ public:
     std::knuth_b knuth(re());
    
     probs &prob = squeme[l][s][outcome];
+    std::cout<< std::endl <<  squeme.size() << ' ' << squeme[0].size() << ' ' << squeme[0][0].size() << std::endl;
     std::discrete_distribution<> distribution(prob.begin(), prob.end());
-    return distribution(knuth);
+    int rec = distribution(knuth);
+    std::cout<< rec << std::endl;
+    return rec;
   }
 
   // Declaration of Optimistic optimitation problem 
-  // (definition in .cpp file)
   friend void OptOpt(sign_scheme &SQ);
 
 
 private:
   size_t L;
-  size_t w;
-  size_t a;
+  size_t A;
   std::vector<int> states;
   state_outcome_probs squeme ;
 };

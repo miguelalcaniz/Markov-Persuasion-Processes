@@ -15,18 +15,18 @@ void OptOpt(sign_scheme &SQ){
 
     for(int l = 0; l < L; ++l){
       for(int s = 0; s < SQ.states[l]; ++s){
-          for(int k = 0; k < SQ.w; ++k){
+          for(int k = 0; k < SQ.A; ++k){
               double sum = 0;
               double value;
-              std::vector<double> v(SQ.a);
+              std::vector<double> v(SQ.A);
 
-              for(int r = 0; r < SQ.a; ++r){
+              for(int r = 0; r < SQ.A; ++r){
                 value = dis(knuth);
                 sum += value;
                 SQ.squeme[l][s][k][r] = value;
               }
               // Normalize the squeme because it corresponds to a probability distribution
-              for(int r = 0; r < SQ.a; ++r)
+              for(int r = 0; r < SQ.A; ++r)
                 SQ.squeme[l][s][k][r] /= sum;
           }
       }

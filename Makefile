@@ -1,26 +1,29 @@
 CXX      ?= g++
 CXXFLAGS ?= -std=c++17
-CPPFLAGS ?= -O3 -Wall -pedantic -I. 
+CPPFLAGS ?= -O3 -Wall -pedantic -I/home/miguelalcaniz/Escritorio/PACS/Proyecto/GitRepository/src
 LDLIBS   ?= 
 LINK.o := $(LINK.cc) # Use C++ linker.
 
 DEPEND = make.dep
 
 EXEC = main
-SRCS = $(wildcard *.cpp)
+SRCDIR = src
+SRCS = $(wildcard $(SRCDIR)/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 
-.PHONY = all $(EXEC) $(OBJS) clean distclean $(DEPEND)
+.PHONY: all clean distclean $(EXEC)
 
 all: $(DEPEND) $(EXEC)
 
 $(EXEC): $(OBJS)
+	$(CXX) $(OBJS) $(LDLIBS) -o $@
 
-$(OBJS): %.o: %.cpp
+$(SRCDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	$(RM) $(DEPEND)
-	$(RM) *.o
+	$(RM) $(SRCDIR)/*.o
 
 distclean: clean
 	$(RM) $(EXEC)
@@ -28,9 +31,8 @@ distclean: clean
 
 $(DEPEND): $(SRCS)
 	@$(RM) $(DEPEND)
-	@for file in $(SRCS); \
-	do \
-	  $(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $${file} >> $(DEPEND); \
+	@for file in $(SRCS); do \
+	  $(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $$file >> $(DEPEND); \
 	done
 
 -include $(DEPEND)

@@ -7,21 +7,36 @@
 
 
 
+// Method that generates an episode with a given prior distribution, siganling scheme and probabilities of transitions
+void episode::generate_episode(prior mu, sign_scheme phi, transitions trans)
+{
+    int actual_state = 0;
+    int outcome;
+    int action;
+     
+    for(int l = 0; l < L-1; ++l){
+      outcome = mu.generate_outcome(l, actual_state);
+      action = phi.recommendation(l, actual_state, outcome);
+      SOA soa(l, outcome, action);
+      ep[l] = soa;
+      actual_state = trans.next_state(l, actual_state, action);
+    }
+}
+
+
 // This function reads a .txt file and sets all the information of the enviroment into the variables 
 
-
-void read_enviroment(size_t &L, std::vector<int> &states, size_t &a, transitions &trans, 
-                     rewards &Srewards, rewards &Rrewards, size_t &w, prior &mu, const std::string& fileName){
-    
+void read_enviroment(size_t &L, std::vector<int> &states, size_t &A, transitions &trans, 
+                     rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
+                     prior &mu, const std::string& fileName)
+{
    // Initializing the .txt stream reader
-
    std::ifstream inputFile(fileName);
 
    if(!inputFile) {
-      std::cerr << "The file couldn't be opened." << std::endl;
+      std::cerr << "The file couldn't be opened.\n";
       return;
    }
-  
 
    // Reading the number of states
 
@@ -40,12 +55,12 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &a, transitions
    for(int i = 0; i < 3; ++i)
       std::getline(inputFile, textLine);
 
-   inputFile >> a;
+   inputFile >> A;
 
    for(int i = 0; i < 3; ++i)
       std::getline(inputFile, textLine);
    
-   trans.init_transitions(states, a);
+   trans.init_transitions(states, A);
        
 
    // Reading the probability transitions
@@ -55,41 +70,48 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &a, transitions
       nStatesO = states[l];
       nStatesD = states[l+1];
       for(int sO = 0; sO < nStatesO; sO++){
-        for(int action = 0; action < a; action++){
-          double p;
+        for(int action = 0; action < A; action++){
+          double p, sum = 0;
           std::vector<double> probs;
           for(int sD = 0; sD < nStatesD; sD++){
             inputFile >> p;
+            if(p > 1 || p < 0){
+              std::cerr << "The inputs given for partition " << l << " and state " << sO;
+              std::cerr << " doesn't correspond to a probability distribution.\n";
+              return; 
+            } 
+            sum += p;
             probs.push_back(p);
+          }
+          if(sum != 1){
+            std::cerr << "The inputs given for partition " << l << " and state " << sO;
+            std::cerr << " doesn't correspond to a probability distribution.\n";
+            return; 
           }
         trans.set_transitions(l, sO, action, probs); 
         }
       }
    }
-  
-
-  // Reading Omega
-
-  for(int i = 0; i < 3; ++i)
-    std::getline(inputFile, textLine);
-    
-  inputFile >> w;
-  
+   
 
   // Reading the rewards of the sender 
   
   for(int i = 0; i < 3; ++i)
     std::getline(inputFile, textLine);
   
-  Srewards.init_rewards(states, w, a);
+  Srewards.init_rewards(states, A);
  
   double r;
   for(int l = 0; l < L-1; ++l){
     for(int s = 0; s < states[l]; ++s){
-      for(int o = 0; o < w; ++o){
+      for(int o = 0; o < A; ++o){
          std::vector<double> v;
-         for(int i = 0; i < a; ++i){
+         for(int i = 0; i < A; ++i){
            inputFile >> r;
+           if(r > 1 || r < 0){
+             std::cerr << "The rewards are not in the required rank (inside [0,1]).\n";
+             return; 
+           } 
            v.push_back(r);
          }
          Srewards.set_rewards(l, s, o, v);
@@ -103,14 +125,18 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &a, transitions
   for(int i = 0; i < 3; ++i)
     std::getline(inputFile, textLine);
   
-  Rrewards.init_rewards(states, w, a);
+  Rrewards.init_rewards(states, A);
  
   for(int l = 0; l < L-1; ++l){
     for(int s = 0; s < states[l]; ++s){
-      for(int o = 0; o < w; ++o){
+      for(int o = 0; o < A; ++o){
          std::vector<double> v;
-         for(int i = 0; i < a; ++i){
+         for(int i = 0; i < A; ++i){
            inputFile >> r;
+           if(r > 1 || r < 0){
+             std::cerr << "The rewards are not in the required rank (inside [0,1]).\n";
+             return; 
+           } 
            v.push_back(r);
          }
          Rrewards.set_rewards(l, s, o, v);
@@ -124,17 +150,27 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &a, transitions
   for(int i = 0; i < 3; ++i)
     std::getline(inputFile, textLine);
 
-  mu.init_prior(states, w);
+  mu.init_prior(states, A);
     
   double p;
   for(int l = 0; l < L; l++){
     int sMax = states[l];
     for(int s = 0; s < sMax; ++s){
       std::vector<double> ps;
-      for(int o = 0; o < w; ++o){
+      double sum = 0; 
+      for(int o = 0; o < A; ++o){
         inputFile >> p;
+        sum += p;
+        if(p > 1 || p < 0){
+          std::cerr << "The prior function is incorrect\n";
+          return;
+        } 
         ps.push_back(p);
       }
+      if(sum != 1){
+          std::cerr << "The prior function is incorrect\n";
+          return;
+        } 
       mu.set_prior(l,s,ps);
     }
   }
@@ -145,10 +181,9 @@ void read_enviroment(size_t &L, std::vector<int> &states, size_t &a, transitions
 
 
 
-
-void print_enviroment(std::vector<int> &states, size_t &a, transitions &trans, 
-                     rewards &Srewards, rewards &Rrewards, size_t &w, prior &mu){
-
+void print_enviroment(std::vector<int> &states, size_t &A, transitions &trans, 
+                     rewards<TypeReward::Sender> &Srewards, rewards<TypeReward::Receiver> &Rrewards, 
+                     prior &mu){
 
   std::cout<< "--------------------------------------" << std::endl;
   std::cout<< "TESTING THE CLASS EPISODE" << std::endl << std::endl;
@@ -164,15 +199,11 @@ void print_enviroment(std::vector<int> &states, size_t &a, transitions &trans,
 
   // Printing the number of actions
 
-  std::cout<< "The number of actions is : " << a << std::endl << std::endl;
+  std::cout<< "The number of actions is : " << A << std::endl << std::endl;
    
   // Printing the probability transitions
 
   std::cout<< trans << std::endl;
-
-  // Printing the number of outcomes
-
-  std::cout<< "The number of outcomes is " << w << std::endl << std::endl;
 
   // Printing the sender rewards
 
@@ -200,5 +231,8 @@ std::ostream &operator<<(std::ostream &stream, episode &ep)
   stream << std::endl;
   return stream;
 };
+
+
+
 
 

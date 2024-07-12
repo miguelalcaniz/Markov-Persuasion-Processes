@@ -3,6 +3,7 @@
 #include <fstream>
 #include <map>
 #include <random>
+#include <string>
 #include "episode_generator.hpp"
 #include "markov_persuasion_process.hpp"
 #include "OptOpt.hpp"
@@ -15,31 +16,36 @@ int main() {
 
   size_t L;
   std::vector<int> states;
-  size_t a;
+  size_t A;
   transitions trans;
-  rewards Srewards, Rrewards;
-  size_t w; 
+  rewards<TypeReward::Sender> Srewards;
+  rewards<TypeReward::Receiver> Rrewards; 
   prior mu;
+
+  std::string source = "././test/";
+  std::string filename = "data.txt";
+  //std::string filename = "data2.txt"; ???????????????????'
+  std::string DATA = source + filename;
 
   // Reading the Markov Persuasion Process variables
 
-  read_enviroment(L, states, a, trans, Srewards, Rrewards, w, mu, "data.txt");
+  read_enviroment(L, states, A, trans, Srewards, Rrewards, mu, DATA);
 
   // Printing the Markov Persuasion Process variables
 
-//  print_enviroment(states, a, trans, Srewards, Rrewards, w, mu);
+  print_enviroment(states, A, trans, Srewards, Rrewards, mu);
 
   // Initializing and printing signaling squeme
 
   sign_scheme phi;
-  phi.init_scheme(states, a, w);
+  phi.init_scheme(states, A);
 
   OptOpt(phi);
 
     for(int l = 0; l < L; ++l){
       for(int s = 0; s < states[l]; ++s){
-          for(int k = 0; k < w; ++k){
-              for(int r = 0; r < a; ++r)
+          for(int k = 0; k < A; ++k){
+              for(int r = 0; r < A; ++r)
                 std::cout<< phi.get_sign(l,s,k,r) << ' ';
               std::cout<< std::endl;
           }
@@ -54,19 +60,28 @@ int main() {
   int actual_state = 0;
   int outcome;
   int action;
+  
   episode ep(L);
 
-  for(int l = 0; l < L-1; ++l){
+  std::cout<< "HERE WE TEST ALGORITHM 1 (Sender-Receiver Interaction) \n\n";
+
+ // for(int l = 0; l < L-1; ++l){
+  for(int l = 0; l < 1; ++l){
+    std::cout<< "l = " << l << std::endl;
     outcome = mu.generate_outcome(l, actual_state);
+    std::cout<< "Llega al outcome y da " << outcome << "\n";
     action = phi.recommendation(l, actual_state, outcome);
+    std::cout<< "Llega a la accion\n Y a todo esto la l = " << l << " outcome=" << outcome<< " action=" <<  std::endl;
     SOA soa(l, outcome, action);
+    /*
     ep.set_soa(l, soa);
+    std::cout<< "Llega a la soa\n";
     actual_state = trans.next_state(l, actual_state, action);
+    std::cout<< "Llega a la next state\n";
+    */
   }
 
- std::cout<< "ESTO ES LA PRUEBA DE LA FUNCION STREAM \n";
  std::cout<< ep << std::endl;
- std::cout<< std::endl;
 
  
   // Testing the prior function and its method to randomly generate an outcome

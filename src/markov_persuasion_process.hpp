@@ -11,7 +11,14 @@
 
 // Alias for making the code more readable
 using TensorI = std::vector<int>;
+using Tensor2I = std::vector<TensorI>;
+using Tensor3I = std::vector<Tensor2I>;
+using Tensor4I = std::vector<Tensor3I>;
 using TensorD = std::vector<double>;
+using Tensor2D = std::vector<TensorD>;
+using Tensor3D = std::vector<Tensor2D>;
+using Tensor4D = std::vector<Tensor3D>;
+
 
 // Definition of the struct Settings
 struct Enviroment {
@@ -24,6 +31,13 @@ struct Enviroment {
     prior mu;
 };
 
+struct Estimators {
+    prior estimated_mu;
+    transitions estimated_trans;
+    rewards<TypeReward::Sender> estimated_SR;
+    rewards<TypeReward::Receiver> estimated_RR;
+};
+ 
 // State-Outcome-Action
 class SOA {
 public:
@@ -70,8 +84,11 @@ private:
 class episode {
 public:
     // Constructor
-    episode(size_t L_value): L(L_value){
-        ep.resize(L_value);
+    episode(TensorI values_states){
+        L = values_states.size();
+        states = values_states;
+        ep.resize(L);
+
     };
 
     void set_soa(int n, SOA soa){
@@ -91,8 +108,62 @@ public:
 
 private:
     size_t L;
+    TensorI states;
     std::vector<SOA> ep;
 };
+
+
+class TupleVisited{
+public:
+  // Constructor
+  TupleVisited(Enviroment& env)
+  {
+    L = env.L;
+    A = env.A;
+    states = env.states;
+
+    visits.resize(L-1);
+    out_of.resize(L-1);
+    for(int l = 0; l < L-1; ++l){
+      visits[l].resize(states[l]);
+      out_of[l].resize(states[l]);
+      for(int s = 0; s < states[l]; ++s){
+        visits[l][s].resize(A);
+        out_of[l][s] = TensorI(A, 0);
+        for(int a = 0; a < A; ++a)
+          visits[l][s][a] = TensorI(states[l+1], 0);
+      }
+    }
+  };
+
+  void visited(const int l, const int s, const int a, const int x)
+  {
+    visits[l][s][a][x]++;
+    out_of[l][s][a]++;
+  };
+
+  void update_transitions(episode &ep, transitions &trans_est){
+    for(int l = 0; l < L-1; ++l){
+      const SOA& origin = ep.get_soa(l);
+      const SOA& destination = ep.get_soa(l+1);
+      for(int x = 0; x < states[l+1]; ++x){
+        int s = origin.getX();
+        int o = origin.getW(); 
+        int a = origin.getA(); 
+        int p = static_cast<double>(visits[s][o][a][x]) / out_of[l][s][a];
+        trans_est.set_transitions(l, s, a, x, p);
+      }
+    }
+  };  
+
+private:
+  size_t L;
+  size_t A;
+  TensorI states;
+  Tensor3I out_of;
+  Tensor4I visits;
+};
+
 
 
 // Declaration of the function that reads the values of the enviroment

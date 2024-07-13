@@ -261,7 +261,7 @@ episode S_R_interaction(Enviroment& env, sign_scheme phi){
   // Declaration of the auxiliar variables for the algorithm
   int action, outcome, actual_state = 0;
   
-  episode ep(L);
+  episode ep(states);
 
   std::cout<< "HERE WE TEST ALGORITHM 1 (Sender-Receiver Interaction) \n\n";
 
@@ -277,6 +277,8 @@ episode S_R_interaction(Enviroment& env, sign_scheme phi){
   return ep;
 
 }
+
+
 
 
 

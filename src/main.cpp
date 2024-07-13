@@ -46,38 +46,40 @@ int main() {
 
   OptOpt(phi);
 
-    for(int l = 0; l < L; ++l){
-      for(int s = 0; s < states[l]; ++s){
-          for(int k = 0; k < A; ++k){
-              for(int r = 0; r < A; ++r)
-                std::cout<< phi.get_sign(l,s,k,r) << ' ';
-              std::cout<< std::endl;
-          }
-          std::cout<< std::endl;
-      }
-      std::cout<< std::endl;
+  for(int l = 0; l < L; ++l){
+    for(int s = 0; s < states[l]; ++s){
+        for(int k = 0; k < A; ++k){
+            for(int r = 0; r < A; ++r)
+              std::cout<< phi.get_sign(l,s,k,r) << ' ';
+            std::cout<< std::endl;
+        }
+        std::cout<< std::endl;
     }
+    std::cout<< std::endl;
+  }
 
 
   // Algorithm 1 (Sender-Receivers Interaction at episode t)
 
- episode ep = S_R_interaction(env, phi);
+  episode ep = S_R_interaction(env, phi);
 
- std::cout<< ep << std::endl;
+  std::cout<< ep << std::endl;
+
+
 
   // Algorithm 2 (Optimistic Persuasive Policy Search (full))
   
   // Require: X, A, T, confidence parameter delta ( 0 < delta < 1)
   unsigned int T = 10;
 
-  // Initialize all estimators to 0
-  prior estimated_mu;
-  transitions estimated_trans;
-  rewards<TypeReward::Sender> estimated_SR;
-  rewards<TypeReward::Receiver> estimated_RR;
-
+  // Initialize estimators
+  Estimators est;
 
   // Initialize all bounds to +inf
+  
+
+
+
 
   return 0;
 }

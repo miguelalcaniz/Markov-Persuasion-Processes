@@ -67,10 +67,15 @@ using Tensor4D = std::vector<Tensor3D>;
         // Method for initializing the values of the variables
         void init_transitions(const TensorI &state_values, const size_t A_value);
 
-        // Method for setting the values of the transition probabilities
+        // Methods for setting the values of the transition probabilities
         void set_transitions(const int l, const int origin, const int action, 
                              const TensorD &probs){
             tr[l][{origin, action}] = probs;
+        }
+         
+        void set_transitions(const int l, const int origin, const int action, 
+                             const int destination, const double p){
+            tr[l][{origin, action}][destination] = p;
         }
 
         // Method for obtaining the values of the transition probabilities

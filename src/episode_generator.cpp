@@ -72,6 +72,7 @@ operator<<(std::ostream &stream, prior &mu){
   return stream;
 }
 
+
 // Constructor which already sets the values
 transitions::transitions(const TensorI &state_values, const size_t A_value)
 {

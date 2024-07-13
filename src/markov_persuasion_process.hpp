@@ -116,25 +116,7 @@ private:
 class TupleVisited{
 public:
   // Constructor
-  TupleVisited(Enviroment& env)
-  {
-    L = env.L;
-    A = env.A;
-    states = env.states;
-
-    visits.resize(L-1);
-    out_of.resize(L-1);
-    for(int l = 0; l < L-1; ++l){
-      visits[l].resize(states[l]);
-      out_of[l].resize(states[l]);
-      for(int s = 0; s < states[l]; ++s){
-        visits[l][s].resize(A);
-        out_of[l][s] = TensorI(A, 0);
-        for(int a = 0; a < A; ++a)
-          visits[l][s][a] = TensorI(states[l+1], 0);
-      }
-    }
-  };
+  TupleVisited(Enviroment& env);
 
   void visited(const int l, const int s, const int a, const int x)
   {
@@ -142,19 +124,8 @@ public:
     out_of[l][s][a]++;
   };
 
-  void update_transitions(episode &ep, transitions &trans_est){
-    for(int l = 0; l < L-1; ++l){
-      const SOA& origin = ep.get_soa(l);
-      const SOA& destination = ep.get_soa(l+1);
-      for(int x = 0; x < states[l+1]; ++x){
-        int s = origin.getX();
-        int o = origin.getW(); 
-        int a = origin.getA(); 
-        int p = static_cast<double>(visits[s][o][a][x]) / out_of[l][s][a];
-        trans_est.set_transitions(l, s, a, x, p);
-      }
-    }
-  };  
+  // Method that updates the estimated transition function
+  void update_transitions(const episode &ep, transitions &trans_est);
 
 private:
   size_t L;
@@ -164,6 +135,21 @@ private:
   Tensor4I visits;
 };
 
+class est_prior : public prior {
+public:
+  est_prior(const TensorI &states_values, const size_t A_value);
+
+  void visited(const int l, const int s, const int o){
+    visits[l][s][o]++;
+    out_of[l][s]++;
+  }
+
+  void update_prior(const episode &ep);
+
+private:
+  Tensor2I out_of;
+  Tensor3I visits;
+};
 
 
 // Declaration of the function that reads the values of the enviroment

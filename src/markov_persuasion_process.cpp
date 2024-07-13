@@ -244,6 +244,66 @@ std::ostream &operator<<(std::ostream &stream, episode &ep)
   return stream;
 };
 
+// Constructor
+TupleVisited::TupleVisited(Enviroment& env)
+{
+  L = env.L;
+  A = env.A;
+  states = env.states;
+
+  visits.resize(L-1);
+  out_of.resize(L-1);
+  for(int l = 0; l < L-1; ++l){
+    visits[l].resize(states[l]);
+    out_of[l].resize(states[l]);
+    for(int s = 0; s < states[l]; ++s){
+      visits[l][s].resize(A);
+      out_of[l][s] = TensorI(A, 0);
+      for(int a = 0; a < A; ++a)
+        visits[l][s][a] = TensorI(states[l+1], 0);
+    }
+  }
+};
+
+// Method that updates the estimated transition function
+void TupleVisited::update_transitions(const episode &ep, transitions &trans_est){
+  for(int l = 0; l < L-1; ++l){
+    const SOA& origin = ep.get_soa(l);
+    for(int x = 0; x < states[l+1]; ++x){
+      const int& s = origin.getX();
+      const int& o = origin.getW(); 
+      const int& a = origin.getA(); 
+      int p = static_cast<double>(visits[l][s][a][x]) / out_of[l][s][a];
+      trans_est.set_transitions(l, s, a, x, p);
+    }
+  }
+};  
+
+est_prior::est_prior(const TensorI &states_values, const size_t A_value){
+  A = A_value;
+  L = states_values.size();
+  states = states_values;
+
+  priorD.resize(L);
+  out_of.resize(L);
+  visits.resize(L);
+  for(int l = 0; l < L; l++){
+    priorD[l].resize(states[l]);
+    out_of[l] = TensorI(states[l], 0);
+    visits[l] = Tensor2I(states[l], TensorI(A, 0));
+  }
+}
+
+void est_prior::update_prior(const episode &ep){
+  for(int l = 0; l < L; ++l){
+    const SOA& origin = ep.get_soa(l);
+    const int& s = origin.getX();
+    TensorD probs(A);
+    for(int o = 0; o < A; ++o)
+      probs[o] = static_cast<double>(visits[l][s][o]) / out_of[l][s];
+    set_prior(l,s,probs);
+  }
+}
 
 // Algorithm 1 (Sender-Receivers Interaction at episode t)
 

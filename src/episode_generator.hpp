@@ -10,6 +10,9 @@
 
 // Alias for making the code more readable
 using TensorI = std::vector<int>;
+using Tensor2I = std::vector<TensorI>;
+using Tensor3I = std::vector<Tensor2I>;
+using Tensor4I = std::vector<Tensor3I>;
 using TensorD = std::vector<double>;
 using Tensor2D = std::vector<TensorD>;
 using Tensor3D = std::vector<Tensor2D>;
@@ -47,13 +50,14 @@ using Tensor4D = std::vector<Tensor3D>;
        operator<<(std::ostream &stream, prior &mu);
  
 
-    private:
-        // The probability of having an outcome k in each state j of partition i (prior[i][j][k])
+    protected:
         size_t L;
         size_t A;
         TensorI states;
+        // The probability of having an outcome k in each state j of partition i (priorD[i][j][k])
         Tensor3D priorD;
     };
+
 
     class transitions {
     public:

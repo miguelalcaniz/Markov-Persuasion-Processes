@@ -135,9 +135,9 @@ rewards<R>::rewards(const TensorI &states_values, const int A_value)
   A = A_value;
   L = states_values.size();
   states = states_values;
-  rw = Tensor4D(states.size());
+  rw = Tensor4D(L);
   for(int i = 0; i < states.size(); i++)
-  rw[i] = Tensor3D(states[i], Tensor2D (A));
+    rw[i] = Tensor3D(states[i], Tensor2D (A));
 }
 
 // Method for initializing the values

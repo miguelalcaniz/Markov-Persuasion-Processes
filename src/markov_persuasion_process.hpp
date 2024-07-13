@@ -151,6 +151,22 @@ private:
   Tensor3I visits;
 };
 
+template<TypeReward R>
+class est_rewards : public rewards<R> {
+public:
+
+  est_rewards(const TensorI &states_values, const int A_value);
+     
+  void visited(const int l, const int s, const int o, const int a){
+    visits[l][s][o][a]++;
+  }
+
+  void update_rewards(const episode &ep, const rewards<R> &rw);
+
+private:
+  Tensor4I visits;
+};
+
 
 // Declaration of the function that reads the values of the enviroment
 void read_enviroment(Enviroment &env, const std::string& fileName);

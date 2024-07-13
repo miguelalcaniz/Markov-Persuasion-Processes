@@ -137,9 +137,9 @@ using Tensor4D = std::vector<Tensor3D>;
        friend std::ostream &
        operator<<(std::ostream &stream, rewards<TypeR> &rewards);
 
-    private:
+    protected:
         size_t A;
-        size_t L;
+        size_t L; 
         TensorI states;
         Tensor4D rw; 
     };

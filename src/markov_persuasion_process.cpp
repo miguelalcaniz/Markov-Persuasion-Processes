@@ -305,6 +305,39 @@ void est_prior::update_prior(const episode &ep){
   }
 }
 
+
+// Constructor which already sets de values
+template<TypeReward R>
+est_rewards<R>::est_rewards(const TensorI &states_values, const int A_value)
+{
+  this-> A = A_value;
+  this-> L = states_values.size();
+  this-> states = states_values;
+  this-> rw = Tensor4D(this->L);
+  visits.resize(this->L);
+  for(int s = 0; s < this->L; ++s){
+    this->rw[s] = Tensor3D(this->states[s], Tensor2D (this->A));
+    visits[s] = Tensor3I(this->states[s], Tensor2I (this->A, TensorI(this->A, 0)));
+  };
+}
+
+template<TypeReward R>
+void est_rewards<R>::update_rewards(const episode &ep, const rewards<R> &rr)
+{
+  for(int l = 0; l < this->L; ++l){
+    const SOA& origin = ep.get_soa(l);
+    const int& s = origin.getX();
+    const int& o = origin.getW();
+    const int& a = origin.getA();
+    // Update the estimated rewards, theorically the reward corresponds to a prob distribution
+    // Now we are just updating the estimated reward with the mean of all the seen rewards 
+    // (that correspond to a fix value so it doesn't make much sense)
+    this->rw[l][s][o][a] *= static_cast<double>(visits[l][s][o][a]-1)/visits[l][s][o][a];
+    this->rw[l][s][o][a] += static_cast<double>(rr[l][s][o][a])/visits[l][s][o][a];
+  }
+}
+
+
 // Algorithm 1 (Sender-Receivers Interaction at episode t)
 
 episode S_R_interaction(Enviroment& env, sign_scheme phi){ 

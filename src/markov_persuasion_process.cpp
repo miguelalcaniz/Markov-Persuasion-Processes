@@ -99,7 +99,6 @@ void read_enviroment(Enviroment &env, const std::string& fileName)
       }
    }
    
-
   // Reading the rewards of the sender 
   
   for(int i = 0; i < 3; ++i)
@@ -244,19 +243,22 @@ std::ostream &operator<<(std::ostream &stream, episode &ep)
   return stream;
 };
 
-// Constructor
-TupleVisited::TupleVisited(Enviroment& env)
-{
-  L = env.L;
-  A = env.A;
-  states = env.states;
+
+est_transitions::est_transitions(const TensorI &state_values, const size_t A_value){
+  
+  A = A_value; 
+  L = state_values.size();
+  states = state_values;
+  tr.resize(L-1);
 
   visits.resize(L-1);
   out_of.resize(L-1);
   for(int l = 0; l < L-1; ++l){
+    tr[l].resize(states[l]);
     visits[l].resize(states[l]);
     out_of[l].resize(states[l]);
     for(int s = 0; s < states[l]; ++s){
+      tr[l][s] = Tensor2D(A, TensorD(states[l+1]));
       visits[l][s].resize(A);
       out_of[l][s] = TensorI(A, 0);
       for(int a = 0; a < A; ++a)
@@ -265,19 +267,22 @@ TupleVisited::TupleVisited(Enviroment& env)
   }
 };
 
-// Method that updates the estimated transition function
-void TupleVisited::update_transitions(const episode &ep, transitions &trans_est){
+void est_transitions::update_transitions(const episode &ep){
+
   for(int l = 0; l < L-1; ++l){
     const SOA& origin = ep.get_soa(l);
+    const int& s = origin.getX();
+    const int& o = origin.getW(); 
+    const int& a = origin.getA(); 
+    TensorD probs(states[l+1]);
     for(int x = 0; x < states[l+1]; ++x){
-      const int& s = origin.getX();
-      const int& o = origin.getW(); 
-      const int& a = origin.getA(); 
-      int p = static_cast<double>(visits[l][s][a][x]) / out_of[l][s][a];
-      trans_est.set_transitions(l, s, a, x, p);
+      visited(l, s, a, x);
+      probs[x] = static_cast<double>(visits[l][s][a][x]) / out_of[l][s][a];
     }
+    set_transitions(l, s, a, probs);
   }
-};  
+};
+
 
 est_prior::est_prior(const TensorI &states_values, const size_t A_value){
   A = A_value;
@@ -298,6 +303,8 @@ void est_prior::update_prior(const episode &ep){
   for(int l = 0; l < L; ++l){
     const SOA& origin = ep.get_soa(l);
     const int& s = origin.getX();
+    const int& o = origin.getW();
+    visited(l, s, o);
     TensorD probs(A);
     for(int o = 0; o < A; ++o)
       probs[o] = static_cast<double>(visits[l][s][o]) / out_of[l][s];
@@ -316,7 +323,7 @@ est_rewards<R>::est_rewards(const TensorI &states_values, const int A_value)
   this-> rw = Tensor4D(this->L);
   visits.resize(this->L);
   for(int s = 0; s < this->L; ++s){
-    this->rw[s] = Tensor3D(this->states[s], Tensor2D (this->A));
+    this->rw[s] = Tensor3D(this->states[s], Tensor2D (this->A, TensorD(this->states[s+1])));
     visits[s] = Tensor3I(this->states[s], Tensor2I (this->A, TensorI(this->A, 0)));
   };
 }
@@ -324,7 +331,7 @@ est_rewards<R>::est_rewards(const TensorI &states_values, const int A_value)
 template<TypeReward R>
 void est_rewards<R>::update_rewards(const episode &ep, const rewards<R> &rr)
 {
-  for(int l = 0; l < this->L; ++l){
+  for(int l = 0; l < this->L-1; ++l){
     const SOA& origin = ep.get_soa(l);
     const int& s = origin.getX();
     const int& o = origin.getW();
@@ -333,7 +340,7 @@ void est_rewards<R>::update_rewards(const episode &ep, const rewards<R> &rr)
     // Now we are just updating the estimated reward with the mean of all the seen rewards 
     // (that correspond to a fix value so it doesn't make much sense)
     this->rw[l][s][o][a] *= static_cast<double>(visits[l][s][o][a]-1)/visits[l][s][o][a];
-    this->rw[l][s][o][a] += static_cast<double>(rr[l][s][o][a])/visits[l][s][o][a];
+    this->rw[l][s][o][a] += static_cast<double>(rr.get_reward(l, s, o, a))/visits[l][s][o][a];
   }
 }
 
@@ -356,8 +363,6 @@ episode S_R_interaction(Enviroment& env, sign_scheme phi){
   
   episode ep(states);
 
-  std::cout<< "HERE WE TEST ALGORITHM 1 (Sender-Receiver Interaction) \n\n";
-
   for(int l = 0; l < L; ++l){
     outcome = mu.generate_outcome(l, actual_state);
     action = phi.recommendation(l, actual_state, outcome);
@@ -368,10 +373,59 @@ episode S_R_interaction(Enviroment& env, sign_scheme phi){
   }
   
   return ep;
-
 }
 
 
+// Algorithm 2 OPPS
+
+Estimators OPPS(Enviroment& env, unsigned int T){
+
+  // Defining some references to the variables to avoid writing env.
+  size_t& L = env.L;
+  TensorI& states = env.states;
+  size_t& A = env.A;
+  transitions& trans = env.trans;
+  rewards<TypeReward::Sender>& Srewards = env.Srewards;
+  rewards<TypeReward::Receiver>& Rrewards = env.Rrewards; 
+  prior& mu = env.mu;
+
+  // Initializing the estimators variables
+  est_prior estimated_mu(states, A);
+  est_transitions estimated_trans(states, A);
+  est_rewards<TypeReward::Sender> estimated_SR(states, A);
+  est_rewards<TypeReward::Receiver> estimated_RR(states, A);
+
+  sign_scheme phi;
+  phi.init_scheme(states, A);
+
+  for(int t = 0; t < T; ++t){
+    OptOpt(phi);
+    episode ep = S_R_interaction(env, phi);
+    // Update of the estimated prior
+    estimated_mu.update_prior(ep);
+    // Update estimation of the transitions function 
+    estimated_trans.update_transitions(ep);
+    // Update rewards
+    estimated_SR.update_rewards(ep, Srewards);
+    estimated_RR.update_rewards(ep, Rrewards);
+  }
+
+  Estimators estimators; 
+  estimators.estimated_mu = estimated_mu; 
+  estimators.estimated_trans = estimated_trans;
+  estimators.estimated_SR = estimated_SR;
+  estimators.estimated_RR = estimated_RR;
+  return estimators;
+}
+
+
+
+
+template est_rewards<TypeReward::Receiver>::est_rewards(const TensorI &states_values, const int A_value);
+template est_rewards<TypeReward::Sender>::est_rewards(const TensorI &states_values, const int A_value);
+template void est_rewards<TypeReward::Receiver>::update_rewards(const episode &ep, const rewards<TypeReward::Receiver> &rr);
+template void est_rewards<TypeReward::Sender>::update_rewards(const episode &ep, const rewards<TypeReward::Sender> &rr);
+ 
 
 
 

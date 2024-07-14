@@ -62,8 +62,8 @@ operator<<(std::ostream &stream, prior &mu){
   for(int l = 0; l < mu.L; l++){
     int sMax = mu.states[l];
     for(int s = 0; s < sMax; ++s){
-      for(int o = 0; o < mu.A; ++o)
-        stream << mu.get_prior(l,s,o) << ' ';
+      for(int a = 0; a < mu.A; ++a)
+        stream << mu.get_prior(l,s,a) << ' ';
       stream << std::endl;
     }
     stream << std::endl;
@@ -89,6 +89,11 @@ void transitions::init_transitions(const TensorI &state_values, const size_t A_v
   L = state_values.size();
   states = state_values;
   tr.resize(L-1);
+  for(int l = 0; l < L-1; ++l){
+    tr[l].resize(states[l]);
+    for(int s = 0; s < states[l]; ++s)
+      tr[l][s] = Tensor2D(A, TensorD(states[l+1]));
+  }
 }
 
 // Method that gives you the next state randomly with the given probability distribution
@@ -101,7 +106,7 @@ int transitions::next_state(const int l, const int origin, const int action)
   std::random_device re;
   std::knuth_b knuth(re());
   
-  TensorD &prob = tr[l][{origin, action}];
+  TensorD &prob = tr[l][origin][action];
   std::discrete_distribution<> distribution(prob.begin(), prob.end());
   return distribution(knuth);
 }

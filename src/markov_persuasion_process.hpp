@@ -30,13 +30,6 @@ struct Enviroment {
     rewards<TypeReward::Receiver> Rrewards; 
     prior mu;
 };
-
-struct Estimators {
-    prior estimated_mu;
-    transitions estimated_trans;
-    rewards<TypeReward::Sender> estimated_SR;
-    rewards<TypeReward::Receiver> estimated_RR;
-};
  
 // State-Outcome-Action
 class SOA {
@@ -112,7 +105,7 @@ private:
     std::vector<SOA> ep;
 };
 
-
+/*
 class TupleVisited{
 public:
   // Constructor
@@ -134,9 +127,31 @@ private:
   Tensor3I out_of;
   Tensor4I visits;
 };
+*/
+
+class est_transitions : public transitions {
+public:
+  est_transitions(const TensorI &state_values, const size_t A_value);
+
+
+  void visited(const int l, const int s, const int a, const int x)
+  {
+    visits[l][s][a][x]++;
+    out_of[l][s][a]++;
+  };
+
+  // Method that updates the estimated transition function
+  void update_transitions(const episode &ep);
+
+private:
+  Tensor3I out_of;
+  Tensor4I visits;
+};
 
 class est_prior : public prior {
 public:
+  est_prior() = default;
+
   est_prior(const TensorI &states_values, const size_t A_value);
 
   void visited(const int l, const int s, const int o){
@@ -154,6 +169,7 @@ private:
 template<TypeReward R>
 class est_rewards : public rewards<R> {
 public:
+  est_rewards() = default;
 
   est_rewards(const TensorI &states_values, const int A_value);
      
@@ -167,6 +183,12 @@ private:
   Tensor4I visits;
 };
 
+struct Estimators {
+    est_prior estimated_mu;
+    transitions estimated_trans;
+    est_rewards<TypeReward::Sender> estimated_SR;
+    est_rewards<TypeReward::Receiver> estimated_RR;
+};
 
 // Declaration of the function that reads the values of the enviroment
 void read_enviroment(Enviroment &env, const std::string& fileName);
@@ -180,5 +202,9 @@ void print_enviroment(Enviroment &env);
 
 episode S_R_interaction(Enviroment& env, sign_scheme phi);
 
+
+// Algorithm 2 OPPS
+
+Estimators OPPS(Enviroment& env, unsigned int T);
 
 #endif /* MARKOV_PERSUASION_PROCESS_HPP */

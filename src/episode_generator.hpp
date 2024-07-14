@@ -72,19 +72,18 @@ using Tensor4D = std::vector<Tensor3D>;
         void init_transitions(const TensorI &state_values, const size_t A_value);
 
         // Methods for setting the values of the transition probabilities
-        void set_transitions(const int l, const int origin, const int action, 
-                             const TensorD &probs){
-            tr[l][{origin, action}] = probs;
+        void set_transitions(const int l,  const int s, const int a, const TensorD &probs){
+            tr[l][s][a] = probs;
         }
          
-        void set_transitions(const int l, const int origin, const int action, 
-                             const int destination, const double p){
-            tr[l][{origin, action}][destination] = p;
+        void set_transitions(const int l, const int s, const int a, 
+                             const int x, const double p){
+            tr[l][s][a][x] = p;
         }
 
         // Method for obtaining the values of the transition probabilities
-        TensorD& get_transitions(const int l, const int origin, const int action){
-            return tr[l][{origin, action}];
+        TensorD& get_transitions(const int l, const int o, const int a){
+            return tr[l][o][a];
         }
 
         // Method that gives you the next state randomly with the given probability distribution
@@ -94,13 +93,13 @@ using Tensor4D = std::vector<Tensor3D>;
        friend std::ostream &
        operator<<(std::ostream &stream, transitions &trans);
 
-    private:
+    protected:
         size_t L;
         size_t A; 
         TensorI states;
         // Given a state (partition and number of state), an outcome an an action you have the vector
         // of probabilities for each state of the next partition
-        std::vector<std::map<std::pair<int, int>, TensorD>> tr; 
+        Tensor4D tr; 
     };
 
     // Class to differenciate reward from sender and from receiver

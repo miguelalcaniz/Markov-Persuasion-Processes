@@ -11,6 +11,9 @@
 
 int main() {
 
+std::cout<< "prueba" << std::endl;
+
+
   // Declaring the Markov Persuasion Process variables
 
   Enviroment env;
@@ -40,7 +43,7 @@ int main() {
   print_enviroment(env);
 
   // Initializing and printing signaling squeme
-
+/*
   sign_scheme phi;
   phi.init_scheme(states, A);
 
@@ -57,29 +60,27 @@ int main() {
     }
     std::cout<< std::endl;
   }
+*/
 
 
   // Algorithm 1 (Sender-Receivers Interaction at episode t)
+/*
+  sign_scheme phi;
+  phi.init_scheme(states, A);
 
   episode ep = S_R_interaction(env, phi);
 
   std::cout<< ep << std::endl;
-
+*/
 
 
   // Algorithm 2 (Optimistic Persuasive Policy Search (full))
   
-  // Require: X, A, T, confidence parameter delta ( 0 < delta < 1)
-  unsigned int T = 10;
-
-  // Initialize estimators
-  Estimators est;
-
-  // Initialize all bounds to +inf
+  // T correspond to the number of iterations of the Optimistic Persuasive Policy Search algorithm
   
+  unsigned int T = 100;
 
-
-
+  Estimators est = OPPS(env, T);
 
   return 0;
 }

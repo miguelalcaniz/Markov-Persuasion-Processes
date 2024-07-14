@@ -6,7 +6,7 @@
 #include <map>
 
 
-// Constructor which already sets the values
+/* Constructor that initializes the prior class with given state values and action size */
 prior::prior(const TensorI &states_values, const size_t A_value)
 {
   A = A_value;
@@ -18,8 +18,7 @@ prior::prior(const TensorI &states_values, const size_t A_value)
     priorD[l].resize(states[l]);
 }
 
-
-// Method to initialize
+/* Method to initialize the prior with given state values and action size */
 void prior::init_prior(const TensorI &states_values, const size_t A_value)
 {
   A = A_value;
@@ -31,7 +30,7 @@ void prior::init_prior(const TensorI &states_values, const size_t A_value)
     priorD[l].resize(states[l]);
 }
 
-// Method to set values of the prior
+/* Method to set the probability distribution for a specific state */
 void prior::set_prior(const int l, const int s, const TensorD &probs)
 {
   priorD[l][s] = probs;
@@ -41,7 +40,7 @@ void prior::set_prior(const int l, const int s, const TensorD &probs)
   }
 }
 
-// Method that generates a random outcome with the prior[l][s] discrete distribution
+/* Method to generate a random outcome based on the prior probability distribution for a given state */
 int prior::generate_outcome(const int l, const int s)
 {
   std::random_device re;
@@ -52,8 +51,7 @@ int prior::generate_outcome(const int l, const int s)
   return distribution(knuth);
 }
 
-/// Definition of the stream operator for the prior class
-
+/* Stream operator to print the prior distribution */
 std::ostream &
 operator<<(std::ostream &stream, prior &mu){
 
@@ -72,8 +70,7 @@ operator<<(std::ostream &stream, prior &mu){
   return stream;
 }
 
-
-// Constructor which already sets the values
+/* Constructor that initializes the transitions with given state values and action size */
 transitions::transitions(const TensorI &state_values, const size_t A_value)
 {
   A = A_value;
@@ -82,7 +79,7 @@ transitions::transitions(const TensorI &state_values, const size_t A_value)
   tr.resize(L-1);
 }
 
-// Method for initializing the values of the variables
+/* Method to initialize the transitions with given state values and action size */
 void transitions::init_transitions(const TensorI &state_values, const size_t A_value)
 {
   A = A_value;
@@ -96,7 +93,7 @@ void transitions::init_transitions(const TensorI &state_values, const size_t A_v
   }
 }
 
-// Method that gives you the next state randomly with the given probability distribution
+/* Method to generate a random next state based on the transition probabilities for a given state and action */
 int transitions::next_state(const int l, const int origin, const int action)
 {  
   if(l >= L || origin > states[l]){
@@ -111,8 +108,7 @@ int transitions::next_state(const int l, const int origin, const int action)
   return distribution(knuth);
 }
 
-/// Definition of the stream operator for the transitions class
-
+/* Stream operator to print the transition function */
 std::ostream &
 operator<<(std::ostream &stream, transitions &trans)
 {
@@ -133,7 +129,7 @@ operator<<(std::ostream &stream, transitions &trans)
   return stream;
 }
 
-// Constructor which already sets de values
+/* Constructor that initializes the rewards class with given state values and action size */
 template<TypeReward R>
 rewards<R>::rewards(const TensorI &states_values, const int A_value)
 {
@@ -145,7 +141,7 @@ rewards<R>::rewards(const TensorI &states_values, const int A_value)
     rw[i] = Tensor3D(states[i], Tensor2D (A, TensorD(A)));
 }
 
-// Method for initializing the values
+/* Method that initializes the rewards class with given state values and action size */
 template<TypeReward R>
 void rewards<R>::init_rewards(const TensorI &states_values, const int A_value)
 {
@@ -157,6 +153,7 @@ void rewards<R>::init_rewards(const TensorI &states_values, const int A_value)
     rw[i] = Tensor3D(states[i], Tensor2D (A, TensorD(A)));
 }
 
+/* Method to set the reward value for a specific state, action, and outcome */
 template<TypeReward R>
 void rewards<R>::set_rewards(const int l, const int state, const int outcome, 
                  const TensorD& rewards){
@@ -167,6 +164,7 @@ void rewards<R>::set_rewards(const int l, const int state, const int outcome,
   rw[l][state][outcome] = rewards;
 }
 
+/* Method to get the reward value */
 template<TypeReward R>
 const double& rewards<R>::get_reward(const int l, const int state, const int outcome, const int action) const
 {
@@ -175,7 +173,7 @@ const double& rewards<R>::get_reward(const int l, const int state, const int out
   return rw[l][state][outcome][action];
 }
 
-//Method to obtain the values of the rewards
+/* Method to get the vector of rewards of a given initial state and an outcome */
 template<TypeReward R>
 const TensorD& rewards<R>::get_rewards(const int l, const int state, const int outcome) const
 {
@@ -184,8 +182,7 @@ const TensorD& rewards<R>::get_rewards(const int l, const int state, const int o
   return rw[l][state][outcome];
 }
 
-
-/// Definition of the stream operator for the rewards class
+/* Stream operator to print the rewards values */
 template<TypeReward R>
 std::ostream &
 operator<<(std::ostream &stream, rewards<R> &rewards){
@@ -198,8 +195,8 @@ operator<<(std::ostream &stream, rewards<R> &rewards){
   for(int l = 0; l < rewards.L; ++l){
    for(int s = 0; s < rewards.states[l]; ++s){
       for(int o = 0; o < rewards.A; ++o){
-         for(int i = 0; i < rewards.A; ++i){ 
-           stream << rewards.get_reward(l, s, o, i) << " ";
+         for(int a = 0; a < rewards.A; ++a){ 
+           stream << rewards.get_reward(l, s, o, a) << " ";
          }
          stream << "\n";
       }
@@ -209,18 +206,21 @@ operator<<(std::ostream &stream, rewards<R> &rewards){
   return stream;
 }
 
-// Explicit instance for the template for the types used
-
+/* Explicit instance for the template for the types used */
 template rewards<TypeReward::Receiver>::rewards(const TensorI &states_values, const int A_value);
 template rewards<TypeReward::Sender>::rewards(const TensorI &states_values, const int A_value);
+
 template void rewards<TypeReward::Receiver>::init_rewards(const TensorI &states_values, const int A_value);
 template void rewards<TypeReward::Sender>::init_rewards(const TensorI &states_values, const int A_value);
+
 template void rewards<TypeReward::Receiver>::set_rewards(const int l, const int state, const int outcome, const TensorD& rewards);
 template void rewards<TypeReward::Sender>::set_rewards(const int l, const int state, const int outcome, const TensorD& rewards);
+
 template const double& rewards<TypeReward::Receiver>::get_reward(const int l, const int state, const int outcome, const int action) const;
 template const double& rewards<TypeReward::Sender>::get_reward(const int l, const int state, const int outcome, const int action) const;
+
 template const TensorD& rewards<TypeReward::Receiver>::get_rewards(const int l, const int state, const int outcome) const;
 template const TensorD& rewards<TypeReward::Sender>::get_rewards(const int l, const int state, const int outcome) const;
+
 template std::ostream &operator<< (std::ostream& stream, rewards<TypeReward::Sender>& R);
 template std::ostream &operator<< (std::ostream& stream, rewards<TypeReward::Receiver>& R);
- 

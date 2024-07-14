@@ -11,9 +11,6 @@
 
 int main() {
 
-std::cout<< "prueba" << std::endl;
-
-
   // Declaring the Markov Persuasion Process variables
 
   Enviroment env;
@@ -78,9 +75,11 @@ std::cout<< "prueba" << std::endl;
   
   // T correspond to the number of iterations of the Optimistic Persuasive Policy Search algorithm
   
-  unsigned int T = 100;
+  unsigned int T = 1000;
 
   Estimators est = OPPS(env, T);
+  
+  print_estimators(est);
 
   return 0;
 }

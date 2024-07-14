@@ -142,7 +142,7 @@ rewards<R>::rewards(const TensorI &states_values, const int A_value)
   states = states_values;
   rw = Tensor4D(L);
   for(int i = 0; i < states.size(); i++)
-    rw[i] = Tensor3D(states[i], Tensor2D (A));
+    rw[i] = Tensor3D(states[i], Tensor2D (A, TensorD(A)));
 }
 
 // Method for initializing the values
@@ -154,7 +154,7 @@ void rewards<R>::init_rewards(const TensorI &states_values, const int A_value)
   states = states_values;
   rw = Tensor4D(states.size());
   for(int i = 0; i < states.size(); i++)
-  rw[i] = Tensor3D(states[i], Tensor2D (A));
+    rw[i] = Tensor3D(states[i], Tensor2D (A, TensorD(A)));
 }
 
 template<TypeReward R>
@@ -198,8 +198,9 @@ operator<<(std::ostream &stream, rewards<R> &rewards){
   for(int l = 0; l < rewards.L; ++l){
    for(int s = 0; s < rewards.states[l]; ++s){
       for(int o = 0; o < rewards.A; ++o){
-         for(int i = 0; i < rewards.A; ++i)
+         for(int i = 0; i < rewards.A; ++i){ 
            stream << rewards.get_reward(l, s, o, i) << " ";
+         }
          stream << "\n";
       }
    }

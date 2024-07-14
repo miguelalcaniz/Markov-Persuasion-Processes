@@ -131,8 +131,9 @@ private:
 
 class est_transitions : public transitions {
 public:
-  est_transitions(const TensorI &state_values, const size_t A_value);
+  est_transitions() = default;
 
+  est_transitions(const TensorI &state_values, const size_t A_value);
 
   void visited(const int l, const int s, const int a, const int x)
   {
@@ -185,7 +186,7 @@ private:
 
 struct Estimators {
     est_prior estimated_mu;
-    transitions estimated_trans;
+    est_transitions estimated_trans;
     est_rewards<TypeReward::Sender> estimated_SR;
     est_rewards<TypeReward::Receiver> estimated_RR;
 };
@@ -206,5 +207,9 @@ episode S_R_interaction(Enviroment& env, sign_scheme phi);
 // Algorithm 2 OPPS
 
 Estimators OPPS(Enviroment& env, unsigned int T);
+
+// Function that prints the Estimators
+
+void print_estimators(Estimators& est);
 
 #endif /* MARKOV_PERSUASION_PROCESS_HPP */

@@ -212,7 +212,7 @@ void print_enviroment(Enviroment& env)
 
   std::cout<< "The number of actions is : " << A << std::endl << std::endl;
    
-  // Printing the probability transitions
+ // Printing the probability transitions
 
   std::cout<< trans << std::endl;
 
@@ -227,7 +227,7 @@ void print_enviroment(Enviroment& env)
   // Printing the prior function
 
   std::cout<< mu << std::endl;
-
+ 
 };
 
 
@@ -273,10 +273,11 @@ void est_transitions::update_transitions(const episode &ep){
     const SOA& origin = ep.get_soa(l);
     const int& s = origin.getX();
     const int& o = origin.getW(); 
-    const int& a = origin.getA(); 
+    const int& a = origin.getA();
+    const int& x = ep.get_soa(l).getX(); 
     TensorD probs(states[l+1]);
+    visited(l, s, a, x);
     for(int x = 0; x < states[l+1]; ++x){
-      visited(l, s, a, x);
       probs[x] = static_cast<double>(visits[l][s][a][x]) / out_of[l][s][a];
     }
     set_transitions(l, s, a, probs);
@@ -323,7 +324,7 @@ est_rewards<R>::est_rewards(const TensorI &states_values, const int A_value)
   this-> rw = Tensor4D(this->L);
   visits.resize(this->L);
   for(int s = 0; s < this->L; ++s){
-    this->rw[s] = Tensor3D(this->states[s], Tensor2D (this->A, TensorD(this->states[s+1])));
+    this->rw[s] = Tensor3D(this->states[s], Tensor2D (this->A, TensorD(this->A)));
     visits[s] = Tensor3I(this->states[s], Tensor2I (this->A, TensorI(this->A, 0)));
   };
 }
@@ -331,7 +332,7 @@ est_rewards<R>::est_rewards(const TensorI &states_values, const int A_value)
 template<TypeReward R>
 void est_rewards<R>::update_rewards(const episode &ep, const rewards<R> &rr)
 {
-  for(int l = 0; l < this->L-1; ++l){
+  for(int l = 0; l < this->L; ++l){
     const SOA& origin = ep.get_soa(l);
     const int& s = origin.getX();
     const int& o = origin.getW();
@@ -339,8 +340,7 @@ void est_rewards<R>::update_rewards(const episode &ep, const rewards<R> &rr)
     // Update the estimated rewards, theorically the reward corresponds to a prob distribution
     // Now we are just updating the estimated reward with the mean of all the seen rewards 
     // (that correspond to a fix value so it doesn't make much sense)
-    this->rw[l][s][o][a] *= static_cast<double>(visits[l][s][o][a]-1)/visits[l][s][o][a];
-    this->rw[l][s][o][a] += static_cast<double>(rr.get_reward(l, s, o, a))/visits[l][s][o][a];
+    this->rw[l][s][o][a] = rr.get_reward(l, s, o, a);
   }
 }
 
@@ -384,7 +384,6 @@ Estimators OPPS(Enviroment& env, unsigned int T){
   size_t& L = env.L;
   TensorI& states = env.states;
   size_t& A = env.A;
-  transitions& trans = env.trans;
   rewards<TypeReward::Sender>& Srewards = env.Srewards;
   rewards<TypeReward::Receiver>& Rrewards = env.Rrewards; 
   prior& mu = env.mu;
@@ -419,6 +418,32 @@ Estimators OPPS(Enviroment& env, unsigned int T){
 }
 
 
+void print_estimators(Estimators& est)
+{
+  // Defining some references to the variables to avoid writing env.
+  est_prior& estimated_mu = est.estimated_mu;
+  est_transitions& estimated_trans = est.estimated_trans;
+  est_rewards<TypeReward::Sender>& estimated_SR = est.estimated_SR;
+  est_rewards<TypeReward::Receiver>& estimated_RR = est.estimated_RR;
+ 
+ // Printing the probability transitions estimation
+
+  std::cout<< estimated_trans << std::endl;
+
+  // Printing the sender rewards
+
+  std::cout<< estimated_SR << std::endl;
+
+  // Printing the receiver rewards
+
+  std::cout<< estimated_RR << std::endl;
+
+  std::cout<< std::endl;
+
+  // Printing the prior function
+
+  std::cout<< estimated_mu << std::endl;
+}
 
 
 template est_rewards<TypeReward::Receiver>::est_rewards(const TensorI &states_values, const int A_value);

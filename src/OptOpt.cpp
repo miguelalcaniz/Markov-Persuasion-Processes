@@ -2,7 +2,7 @@
 #include <vector>
 
 
-//Method for initializing the vector with size L
+/* Method for initializing the vector with size L */
 void sign_scheme::init_scheme(const TensorI& states_values,const size_t A_value)
 {   
   L = states_values.size();
@@ -21,7 +21,7 @@ void sign_scheme::init_scheme(const TensorI& states_values,const size_t A_value)
   }
 }
 
-// Method for getting the recommendation out of the probability distribution
+/* Method for getting the recommendation probability vector over the actions */
 int sign_scheme::recommendation(int l, int s, int outcome)
 {      
   std::random_device re;
@@ -34,10 +34,15 @@ int sign_scheme::recommendation(int l, int s, int outcome)
 }
 
 
-/*
-This function OptOpt is supposed to solve a maximitation problem called Optimistic Optimitation problem (Opt-Opt)
-*/
+/* 
+   This function OptOpt is supposed to solve a maximitation problem called Optimistic 
+   Optimitation problem (Opt-Opt)
 
+   Function not programmed. (Just a patch function is coded)
+   Theorically it returns the optimal signaling scheme for maximizing sender's rewards.
+   It consists in solving a maximitation linear problem which couldn't be done. 
+   In this code it just returns a valid random signaling scheme.  
+*/
 void OptOpt(sign_scheme &SQ){
 
     size_t L = SQ.states.size();
@@ -58,7 +63,7 @@ void OptOpt(sign_scheme &SQ){
                 sum += value;
                 SQ.squeme[l][s][k][r] = value;
               }
-              // Normalize the squeme because it corresponds to a probability distribution
+              /* Normalize the squeme because it corresponds to a probability distribution */
               for(int r = 0; r < SQ.A; ++r)
                 SQ.squeme[l][s][k][r] /= sum;
           }

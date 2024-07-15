@@ -16,6 +16,7 @@ int main() {
   Enviroment env;
 
   // Defining some references to the variables to avoid writing env.
+
   size_t& L = env.L;
   TensorI& states = env.states;
   size_t& A = env.A;
@@ -39,44 +40,25 @@ int main() {
 
   print_enviroment(env);
 
-  // Initializing and printing signaling squeme
-/*
-  sign_scheme phi;
-  phi.init_scheme(states, A);
-
-  OptOpt(phi);
-
-  for(int l = 0; l < L; ++l){
-    for(int s = 0; s < states[l]; ++s){
-        for(int k = 0; k < A; ++k){
-            for(int r = 0; r < A; ++r)
-              std::cout<< phi.get_sign(l,s,k,r) << ' ';
-            std::cout<< std::endl;
-        }
-        std::cout<< std::endl;
-    }
-    std::cout<< std::endl;
-  }
-*/
-
-
-  // Algorithm 1 (Sender-Receivers Interaction at episode t)
-/*
+  // Algorithm 1 (Sender-Receivers Interaction)
+  std::cout<< "------------------------------------------------\n";
+  std::cout<< "TEST OF ALGORITHM 1 (Sender-Receivers Interaction)\n";
+  std::cout<< "------------------------------------------------\n";
   sign_scheme phi;
   phi.init_scheme(states, A);
 
   episode ep = S_R_interaction(env, phi);
 
-  std::cout<< ep << std::endl;
-*/
-
+  std::cout<< ep << std::endl << std::endl;
 
   // Algorithm 2 (Optimistic Persuasive Policy Search (full))
-  
-  // T correspond to the number of iterations of the Optimistic Persuasive Policy Search algorithm
-  
-  unsigned int T = 1000;
 
+  std::cout<< "------------------------------------------------\n";
+  std::cout<< "TEST OF ALGORITHM 2, Optimistic Persuasive Policy Search\n";
+  std::cout<< "------------------------------------------------\n";
+    
+  unsigned int T = 1000; // T correspond to the number of iterations of the Optimistic Persuasive Policy Search algorithm
+  
   Estimators est = OPPS(env, T);
   
   print_estimators(est);

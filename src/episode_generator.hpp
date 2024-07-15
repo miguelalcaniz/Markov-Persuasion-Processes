@@ -8,7 +8,7 @@
 #include <sstream>
 #include <random>
 
-// Alias for making the code more readable
+/* Alias vectors for making the code more readable */
 using TensorI = std::vector<int>;
 using Tensor2I = std::vector<TensorI>;
 using Tensor3I = std::vector<Tensor2I>;
@@ -19,128 +19,146 @@ using Tensor3D = std::vector<Tensor2D>;
 using Tensor4D = std::vector<Tensor3D>;
 
 
+/* 
+   Prior function class. Defining a probability distribution over
+   outcomes at each state. We let μ(l, x) be the vector of probabilities
+   with which outcomes ω ∈ Ω are sampled in state x ∈ X.
+   (Inputs l and s determine the state of S)
+   (Input w determine the outcome)
+*/
     class prior {
     public:
-        // Default constructor used with init_prior to set values
+        /* Default constructor used with init_prior to set values */
         prior() = default;
         
-        // Constructor which already sets the values
+        /* Constructor that initializes the prior class with given state values and action size */
         prior(const TensorI &states_values, const size_t A_value);
 
-        // Method to initialize
+        /* Method to initialize the prior with given state values and action size */
         void init_prior(const TensorI &states_values, const size_t A_value);
 
-        // Method to set values of the prior
+        /* Method to set the probability distribution for a specific state */
         void set_prior(const int l, const int s, const TensorD &probs);
 
-        // Methods to obtain values of the prior
+        /* Method to get the probability distribution for a specific state */
         const TensorD& get_prior(const int l, const int s) const{
             return priorD[l][s];
         }
 
+        /* Method to get the probability to get outcome (w) for a specific state (l,s) */
         const double& get_prior(const int l, const int s, const int w) const{
             return priorD[l][s][w];
         }
 
-        // Method that generates a random outcome with the prior[l][s] discrete distribution
+        /* Method to generate a random outcome based on the prior probability distribution for a given state */
         int generate_outcome(const int l, const int s);
 
-       /// Stream operator.
+       /* Stream operator to print the prior distribution */
        friend std::ostream &
        operator<<(std::ostream &stream, prior &mu);
  
-
     protected:
-        size_t L;
-        size_t A;
-        TensorI states;
-        // The probability of having an outcome k in each state j of partition i (priorD[i][j][k])
-        Tensor3D priorD;
+        size_t L; // Number of partitions of states
+        size_t A; // Number of possible actions
+        TensorI states; // Vector of states of every partition of S
+        Tensor3D priorD; // Keeps the probability of having an outcome w in each state j of partition i (priorD[i][j][k])
     };
 
-
+    /* 
+       Transition function class. It sets the discrete probability distribution over
+       states of the next partition l+1 for which next state will be x given a tuple 
+       state-action (l, s, a) of partition l, state s and action a. 
+       P (x′ | x, a) be the probability of moving from x ∈ X to x′ ∈ X by taking
+       action a ∈ A.                                                                  
+    */
     class transitions {
     public:
-
-        // Default constructor used with init_transitions to set values
+        /* Default constructor used with init_transitions to initialize class */
         transitions() = default;
 
-        // Constructor which already sets the values
+        /* Constructor that initializes the transitions with given state values and action size */
         transitions(const TensorI &state_values, const size_t A_value);
 
-        // Method for initializing the values of the variables
+        /* Method to initialize the transitions with given state values and action size */
         void init_transitions(const TensorI &state_values, const size_t A_value);
 
-        // Methods for setting the values of the transition probabilities
+        /* Method to set the probability distribution for a specific state-action tuple over states*/
         void set_transitions(const int l,  const int s, const int a, const TensorD &probs){
             tr[l][s][a] = probs;
         }
          
+        /* Method to set the probability for a specific state-action-action tuple */
         void set_transitions(const int l, const int s, const int a, 
                              const int x, const double p){
             tr[l][s][a][x] = p;
         }
 
-        // Method for obtaining the values of the transition probabilities
-        TensorD& get_transitions(const int l, const int o, const int a){
-            return tr[l][o][a];
+        /* Method to get the probability for a specific state-action-action tuple */
+        TensorD& get_transitions(const int l, const int s, const int a){
+            return tr[l][s][a];
         }
 
-        // Method that gives you the next state randomly with the given probability distribution
+        /* Method to generate a random next state based on the transition probabilities for a given state and action */
         int next_state(const int l, const int origin, const int action);
  
-       /// Stream operator.
-       friend std::ostream &
-       operator<<(std::ostream &stream, transitions &trans);
+        /* Stream operator to print the transition function */
+        friend std::ostream &
+        operator<<(std::ostream &stream, transitions &trans);
 
     protected:
-        size_t L;
-        size_t A; 
-        TensorI states;
-        // Given a state (partition and number of state), an outcome an an action you have the vector
-        // of probabilities for each state of the next partition
-        Tensor4D tr; 
+        size_t L; // Number of partitions of states
+        size_t A; // Number of possible actions
+        TensorI states; // Vector of states of every partition of S
+        Tensor4D tr; // Given a state (partition and number of state (l, s)) and an action (o) you have the vector
+                     // of probabilities to move to each state of the next partition
     };
 
-    // Class to differenciate reward from sender and from receiver
+
+    /* Enumerate class to differenciate from sender's reward and from receiver's reward */ 
     enum class TypeReward
     {
         Sender,
         Receiver
     };
 
+
+    /*
+      Rewards class. Computed as a template class to distinguish between Sender and Receiver.
+      It sets the reward from every tuple state-outcome-action (l, s, a, o).
+    */
     template<TypeReward R>
     class rewards {
     public:
 
-        // Default constructor, used with init reward to set the values
+        /* Default constructor used with init_transitions to initialize class */
         rewards() = default;
 
-        // Constructor which already initializes the sizes of the vectors
+        /* Constructor that initializes the rewards class with given state values and action size */
         rewards(const TensorI &states_values, const int A_value);
 
-        // Method for initializing the sizes of the vectors
+        /* Method that initializes the rewards class with given state values and action size */
         void init_rewards(const TensorI &states_values, const int A_value);
 
-        // Method to set the values of the rewards
+        /* Method to set the reward value for a specific state, action, and outcome */
         void set_rewards(const int l, const int state, const int outcome, 
                          const TensorD& rewards);
         
-        //Method to obtain the values of the rewards
+        /* Method to get the rewards for a specific state and outcome */
         const TensorD& get_rewards(const int l, const int state, const int outcome) const;
-
+        
+        /* Method to get the reward value for a specific state, action, and outcome */
         const double& get_reward(const int l, const int state, const int outcome, const int action) const;
 
-       /// Stream operator.
-       template<TypeReward TypeR>
-       friend std::ostream &
-       operator<<(std::ostream &stream, rewards<TypeR> &rewards);
+        /* Stream operator to print the rewards values */
+        template<TypeReward TypeR>
+        friend std::ostream &
+        operator<<(std::ostream &stream, rewards<TypeR> &rewards);
 
     protected:
-        size_t A;
-        size_t L; 
-        TensorI states;
-        Tensor4D rw; 
+        size_t L; // Number of partitions of states
+        size_t A; // Number of possible actions
+        TensorI states; // Vector of states of every partition of S
+        Tensor4D rw; // Tensor that keeps the rewards values for every state-action-outcome
     };
 
 

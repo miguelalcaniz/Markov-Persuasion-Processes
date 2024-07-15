@@ -143,7 +143,6 @@ public:
   /* Constructor to initialize the estimated prior with given state values and action size */
   est_prior(const TensorI &states_values, const size_t A_value);
 
- 
   /* Function that counts a new visited state-outcome tuple */
   void visited(const int l, const int s, const int o){
     visits[l][s][o]++;

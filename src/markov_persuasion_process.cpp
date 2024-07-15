@@ -465,7 +465,7 @@ void print_estimators(Estimators& est)
 
   /* Printing the prior function */
   std::cout<< estimated_mu << std::endl;
-}
+};
 
 
 /* Explicit instance for the template for the types used */

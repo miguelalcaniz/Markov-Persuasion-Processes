@@ -29,7 +29,6 @@ int main() {
 
   std::string source = "././test/";
   std::string filename = "data.txt";
-  //std::string filename = "data2.txt";    STILL IN THE TO DO LIST 
   std::string DATA = source + filename;
 
   // Reading the Markov Persuasion Process variables

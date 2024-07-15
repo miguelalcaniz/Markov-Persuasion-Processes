@@ -7,9 +7,8 @@ In this project we try to implement the algorithms from the paper 'Markov Persua
 
 1. [Description](#description)
 2. [Instalation and compilation](#instalation-and-compilation)
-3. [Usage](#usage)
-4. [License](#license)
-5. [Contact](#contact)
+3. [License](#license)
+4. [Contact](#contact)
 
 ## Description
 
@@ -34,7 +33,6 @@ Ensure you have the following installed:
 3. **Execute the code**
    ```sh
    ./main
-## Usage 
 
 ### License
 
